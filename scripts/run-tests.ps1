@@ -9,4 +9,4 @@ $WorkspaceRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $WorkspaceRoot
 
 $env:PYTHONPATH = $WorkspaceRoot
-& .venv\Scripts\pytest.exe backend\tests -v
+& .venv\Scripts\python.exe -m pytest backend\tests -v

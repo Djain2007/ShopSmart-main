@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  Sparkles,
   ArrowRight,
   Headphones,
   Laptop,
@@ -15,6 +14,7 @@ import {
   Gamepad2,
   Coffee,
   Eye,
+  ShieldCheck,
 } from "lucide-react";
 import type { UnifiedProduct } from "../types";
 import { ProductCard } from "../components/ProductCard";
@@ -32,40 +32,39 @@ interface HomePageProps {
 }
 
 const POPULAR_CATEGORIES = [
-  { id: "earbuds", name: "Earbuds", icon: <Headphones size={22} />, count: "Over 80 models" },
-  { id: "laptops", name: "Laptops", icon: <Laptop size={22} />, count: "Over 120 models" },
-  { id: "smartphones", name: "Smartphones", icon: <Smartphone size={22} />, count: "Over 90 models" },
-  { id: "headphones", name: "Headphones", icon: <Headphones size={22} />, count: "Over 60 models" },
-  { id: "smartwatches", name: "Smartwatches", icon: <Watch size={22} />, count: "Over 45 models" },
+  { id: "earbuds", name: "Earbuds & Audio", query: "wireless earbuds", icon: <Headphones size={20} strokeWidth={2} />, desc: "TWS, ANC & sports audio" },
+  { id: "laptops", name: "Laptops & PCs", query: "laptops for coding", icon: <Laptop size={20} strokeWidth={2} />, desc: "Ultrabooks & workstations" },
+  { id: "smartphones", name: "Smartphones", query: "budget smartphone 5G", icon: <Smartphone size={20} strokeWidth={2} />, desc: "5G phones & flagships" },
+  { id: "smartwatches", name: "Smartwatches", query: "smartwatch with long battery life", icon: <Watch size={20} strokeWidth={2} />, desc: "Fitness & heart tracking" },
 ];
 
 const SHOP_BY_NEED = [
   {
     title: "Study & Productivity",
-    desc: "Long battery life, sharp displays, and crisp audio for focused work sessions.",
+    desc: "Long battery life, sharp displays, and quiet keyboards for deep work.",
     query: "lightweight laptop for students with long battery life",
-    icon: <Briefcase size={22} color="var(--color-royal-blue)" />,
+    icon: <Briefcase size={20} color="var(--color-royal-blue)" />,
     tag: "Work & Study",
   },
   {
     title: "Travel & Commute",
-    desc: "Compact noise-cancelling earbuds and lightweight gear designed for life on the go.",
+    desc: "Active noise cancellation and compact cases designed for transit.",
     query: "wireless noise cancelling headphones for travel",
-    icon: <Plane size={22} color="var(--color-purple)" />,
+    icon: <Plane size={20} color="var(--color-purple)" />,
     tag: "On The Go",
   },
   {
     title: "Gaming & Performance",
-    desc: "High-refresh displays, dedicated RTX graphics, and fast low-latency audio.",
+    desc: "Dedicated RTX graphics, high-refresh panels, and responsive cooling.",
     query: "gaming laptop with 16GB RAM and high refresh display",
-    icon: <Gamepad2 size={22} color="var(--color-orange)" />,
+    icon: <Gamepad2 size={20} color="var(--color-orange)" />,
     tag: "High Power",
   },
   {
-    title: "Everyday Use",
-    desc: "Balanced features, reliable durability, and excellent value for everyday tasks.",
+    title: "Everyday Essentials",
+    desc: "Balanced specifications, durable build quality, and honest value.",
     query: "budget smartphone with 5G and good camera",
-    icon: <Coffee size={22} color="var(--color-green)" />,
+    icon: <Coffee size={20} color="var(--color-green)" />,
     tag: "Best Value",
   },
 ];
@@ -73,8 +72,9 @@ const SHOP_BY_NEED = [
 const SUGGESTIONS = [
   "Wireless earbuds under ₹3,000",
   "Lightweight laptop under ₹80,000",
-  "Headphones for long flights",
-  "Smartwatch with long battery life",
+  "Noise cancelling headphones",
+  "Gym shoes under ₹2,500",
+  "Gaming PC under ₹20,000",
 ];
 
 export const HomePage: React.FC<HomePageProps> = ({
@@ -102,105 +102,104 @@ export const HomePage: React.FC<HomePageProps> = ({
     onTabChange("explore");
   };
 
-  // Sample or actual featured product
   const featured = recommendedProducts.length > 0 ? recommendedProducts[0] : null;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "64px" }}>
-      {/* 1. Hero Section (Two Columns) */}
+    <div style={{ display: "flex", flexDirection: "column", gap: "56px" }}>
+      {/* 1. Hero Section (Balanced Two-Column Shopping Interface) */}
       <section
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: "48px",
+          gap: "40px",
           alignItems: "center",
-          padding: "48px 0 12px 0",
+          padding: "24px 0 8px 0",
         }}
       >
-        {/* Left Column: Headline & Natural Language Search */}
+        {/* Left Column: Headline, Value Prop & Natural Language Search */}
         <div>
-          {/* Introductory Pill */}
+          {/* Subtle Context Tag */}
           <div
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: "8px",
-              backgroundColor: "var(--color-lavender)",
-              color: "var(--color-purple)",
-              border: "1px solid var(--color-lavender-border)",
-              padding: "6px 14px",
-              borderRadius: "var(--radius-full)",
-              fontSize: "0.82rem",
-              fontWeight: "700",
-              marginBottom: "20px",
+              gap: "6px",
+              backgroundColor: "var(--color-royal-blue-light)",
+              color: "var(--color-royal-blue)",
+              border: "1px solid var(--color-royal-blue-border)",
+              padding: "4px 10px",
+              borderRadius: "var(--radius-sm)",
+              fontSize: "0.78rem",
+              fontWeight: "600",
+              marginBottom: "16px",
             }}
           >
-            <Sparkles size={14} />
-            <span>ShopSmart 2.0 · Natural Language Shopping Assistant</span>
+            <ShieldCheck size={14} />
+            <span>Dual-Retailer Discovery · Amazon India & Flipkart</span>
           </div>
 
           {/* Main Heading */}
           <h1
             style={{
-              fontSize: "clamp(2.4rem, 4.5vw, 3.4rem)",
+              fontSize: "clamp(2rem, 3.8vw, 3rem)",
               fontWeight: "800",
-              lineHeight: "1.15",
+              lineHeight: "1.18",
               color: "var(--color-navy)",
-              marginBottom: "18px",
+              marginBottom: "16px",
               letterSpacing: "-0.03em",
             }}
           >
-            Shopping made{" "}
-            <span style={{ color: "var(--color-royal-blue)" }}>smarter.</span>
+            Search in plain words.{" "}
+            <span style={{ color: "var(--color-royal-blue)" }}>Compare real products.</span>
           </h1>
 
           {/* Description */}
           <p
             style={{
-              fontSize: "1.1rem",
+              fontSize: "1.05rem",
               color: "var(--color-text-secondary)",
-              lineHeight: "1.65",
-              marginBottom: "28px",
-              maxWidth: "540px",
+              lineHeight: "1.6",
+              marginBottom: "24px",
+              maxWidth: "520px",
             }}
           >
-            Tell us what you need in plain words. We find the right products, explain why they match, and help you decide with confidence.
+            Describe your budget, desired hardware specs, or everyday needs. ShopSmart discovers live listings across Amazon and Flipkart, extracts genuine specifications, and helps you evaluate options side by side.
           </p>
 
-          {/* Large Natural Language Search Box */}
-          <form onSubmit={handleHeroSubmit} style={{ marginBottom: "20px" }}>
+          {/* Natural Language Search Box */}
+          <form onSubmit={handleHeroSubmit} style={{ marginBottom: "16px" }}>
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 backgroundColor: "var(--color-white)",
-                border: "2px solid var(--color-border)",
-                borderRadius: "var(--radius-xl)",
-                padding: "8px 10px 8px 18px",
-                boxShadow: "var(--shadow-lg)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "var(--radius-md)",
+                padding: "6px 8px 6px 14px",
+                boxShadow: "var(--shadow-sm)",
                 transition: "border-color var(--transition-fast), box-shadow var(--transition-fast)",
-                gap: "12px",
+                gap: "10px",
               }}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = "var(--color-royal-blue)";
-                e.currentTarget.style.boxShadow = "0 8px 24px rgba(37, 99, 235, 0.16)";
+                e.currentTarget.style.boxShadow = "0 0 0 3px rgba(37, 99, 235, 0.12)";
               }}
               onBlur={(e) => {
                 e.currentTarget.style.borderColor = "var(--color-border)";
-                e.currentTarget.style.boxShadow = "var(--shadow-lg)";
+                e.currentTarget.style.boxShadow = "var(--shadow-sm)";
               }}
             >
-              <Search size={22} color="var(--color-royal-blue)" style={{ flexShrink: 0 }} />
+              <Search size={18} color="var(--color-royal-blue)" style={{ flexShrink: 0 }} />
               <input
                 type="text"
                 value={heroQuery}
                 onChange={(e) => setHeroQuery(e.target.value)}
-                placeholder="Describe what you're looking for..."
+                placeholder="What are you shopping for? (e.g. gym shoes under 2500)"
                 style={{
                   border: "none",
                   outline: "none",
                   width: "100%",
-                  fontSize: "1.05rem",
+                  fontSize: "0.96rem",
                   fontWeight: "500",
                   color: "var(--color-text-primary)",
                   background: "transparent",
@@ -210,22 +209,22 @@ export const HomePage: React.FC<HomePageProps> = ({
                 type="submit"
                 className="btn-primary"
                 style={{
-                  padding: "12px 24px",
-                  borderRadius: "var(--radius-lg)",
-                  fontSize: "0.95rem",
+                  padding: "9px 18px",
+                  borderRadius: "var(--radius-sm)",
+                  fontSize: "0.88rem",
                   flexShrink: 0,
                 }}
               >
-                <span>Find</span>
-                <ArrowRight size={17} />
+                <span>Search</span>
+                <ArrowRight size={15} />
               </button>
             </div>
           </form>
 
-          {/* Suggested Searches Chips */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "0.82rem", fontWeight: "600", color: "var(--color-text-muted)" }}>
-              Suggested:
+          {/* Suggested Queries */}
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+            <span style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--color-text-muted)", marginRight: "2px" }}>
+              Try:
             </span>
             {SUGGESTIONS.map((s, idx) => (
               <button
@@ -235,14 +234,13 @@ export const HomePage: React.FC<HomePageProps> = ({
                 style={{
                   backgroundColor: "var(--color-white)",
                   border: "1px solid var(--color-border)",
-                  borderRadius: "var(--radius-full)",
-                  padding: "5px 12px",
+                  borderRadius: "var(--radius-sm)",
+                  padding: "4px 9px",
                   fontSize: "0.78rem",
                   color: "var(--color-text-secondary)",
                   fontWeight: "500",
                   cursor: "pointer",
                   transition: "all var(--transition-fast)",
-                  boxShadow: "var(--shadow-xs)",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = "var(--color-royal-blue)";
@@ -261,60 +259,48 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
         </div>
 
-        {/* Right Column: Featured Product Presentation */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            position: "relative",
-          }}
-        >
-          {/* Decorative soft blue-purple circular background */}
-          <div
-            style={{
-              position: "absolute",
-              width: "380px",
-              height: "380px",
-              borderRadius: "50%",
-              background: "linear-gradient(135deg, rgba(239, 246, 255, 0.9) 0%, rgba(241, 238, 255, 0.8) 100%)",
-              zIndex: 0,
-              filter: "blur(20px)",
-            }}
-          />
-
-          {/* Featured Product Card */}
+        {/* Right Column: Authentic Product Discovery Showcase */}
+        <div style={{ display: "flex", justifyContent: "center" }}>
           <div
             className="card-clean"
             style={{
-              position: "relative",
-              zIndex: 1,
               maxWidth: "380px",
               width: "100%",
-              padding: "24px",
-              borderRadius: "var(--radius-xl)",
-              boxShadow: "var(--shadow-xl)",
+              padding: "20px",
+              borderRadius: "var(--radius-lg)",
+              boxShadow: "var(--shadow-md)",
+              border: "1px solid var(--color-border)",
             }}
           >
-            {/* Top Match Tag */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <span className="badge-clean badge-blue" style={{ fontWeight: "700" }}>
-                <Sparkles size={13} />
-                98% Top Match
+            {/* Retailer Source Tag & Context */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+              <span
+                className={`badge-clean ${
+                  featured && featured.source === "amazon.in" ? "badge-amazon" : "badge-flipkart"
+                }`}
+              >
+                {featured ? (featured.source === "amazon.in" ? "Amazon India" : "Flipkart") : "Live Discovery Preview"}
               </span>
-              <span className="badge-clean badge-amazon">Amazon India</span>
+
+              {featured?.score !== undefined && (
+                <span className="badge-clean badge-blue">
+                  Score {Math.round(featured.score)}/100
+                </span>
+              )}
             </div>
 
             {/* Product Image Stage */}
             <div
               style={{
-                height: "220px",
-                backgroundColor: "#F8FAFC",
-                borderRadius: "var(--radius-lg)",
-                padding: "20px",
+                height: "190px",
+                backgroundColor: "#FFFFFF",
+                borderRadius: "var(--radius-md)",
+                border: "1px solid var(--color-border-subtle)",
+                padding: "16px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                marginBottom: "20px",
+                marginBottom: "16px",
               }}
             >
               {featured && featured.image_url ? (
@@ -324,73 +310,82 @@ export const HomePage: React.FC<HomePageProps> = ({
                   style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }}
                 />
               ) : (
-                <img
-                  src="https://m.media-amazon.com/images/I/71TPda7cwUL._SL1500_.jpg"
-                  alt="Sony WH-1000XM5"
-                  style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }}
-                  onError={(e) => {
-                    // Fallback visual if offline
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
+                <div style={{ textAlign: "center", color: "var(--color-text-muted)" }}>
+                  <Headphones size={42} strokeWidth={1.5} color="var(--color-royal-blue)" style={{ marginBottom: "6px" }} />
+                  <div style={{ fontSize: "0.78rem" }}>Real-time Retailer Scrape</div>
+                </div>
               )}
             </div>
 
             {/* Brand & Title */}
             <span
               style={{
-                fontSize: "0.78rem",
+                fontSize: "0.72rem",
                 fontWeight: "700",
                 color: "var(--color-royal-blue)",
                 textTransform: "uppercase",
+                letterSpacing: "0.04em",
+                display: "block",
+                marginBottom: "4px",
               }}
             >
-              {featured?.brand || "SONY"}
+              {featured?.brand || "VERIFIED HARDWARE"}
             </span>
 
             <h3
               style={{
-                fontSize: "1.05rem",
-                fontWeight: "700",
+                fontSize: "0.95rem",
+                fontWeight: "600",
                 color: "var(--color-navy)",
                 marginBottom: "8px",
-                lineHeight: "1.35",
+                lineHeight: "1.4",
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+                height: "2.8em",
               }}
+              title={featured?.title || "Explore genuine product listings across retailers"}
             >
-              {featured?.title || "Sony WH-1000XM5 Wireless Noise Cancelling Headphones"}
+              {featured?.title || "Active noise cancelling wireless earbuds with fast charging"}
             </h3>
 
-            {/* Key Feature Highlight */}
+            {/* Spec evidence */}
             <p
               style={{
-                fontSize: "0.82rem",
+                fontSize: "0.8rem",
                 color: "var(--color-text-secondary)",
                 marginBottom: "16px",
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+                height: "2.6em",
               }}
             >
               {featured?.bullet_points && featured.bullet_points.length > 0
                 ? featured.bullet_points[0]
-                : "Industry-leading active noise cancellation with 30-hour battery life"}
+                : "Real verified specifications extracted directly from retailer product pages"}
             </p>
 
-            {/* Price & Quick View */}
+            {/* Price & Action */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                paddingTop: "14px",
+                paddingTop: "12px",
                 borderTop: "1px solid var(--color-border)",
               }}
             >
               <div>
-                <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", display: "block" }}>
-                  Best Price
+                <span style={{ fontSize: "0.72rem", color: "var(--color-text-muted)", display: "block" }}>
+                  Retail Price
                 </span>
-                <span style={{ fontSize: "1.3rem", fontWeight: "800", color: "var(--color-navy)" }}>
+                <span style={{ fontSize: "1.2rem", fontWeight: "700", color: "var(--color-navy)" }}>
                   {featured && featured.price !== null
                     ? `₹${featured.price.toLocaleString("en-IN")}`
-                    : "₹26,990"}
+                    : "Live Pricing"}
                 </span>
               </div>
 
@@ -400,14 +395,14 @@ export const HomePage: React.FC<HomePageProps> = ({
                   if (featured) {
                     onQuickView(featured);
                   } else {
-                    onSearch("Sony headphones");
+                    onSearch("wireless earbuds");
                     onTabChange("explore");
                   }
                 }}
                 className="btn-secondary"
-                style={{ padding: "8px 16px", fontSize: "0.85rem" }}
+                style={{ padding: "6px 14px", fontSize: "0.82rem" }}
               >
-                <Eye size={15} />
+                <Eye size={14} />
                 <span>Quick View</span>
               </button>
             </div>
@@ -417,84 +412,84 @@ export const HomePage: React.FC<HomePageProps> = ({
 
       {/* 2. Popular Categories */}
       <section>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "20px" }}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "16px" }}>
           <div>
-            <h2 style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--color-navy)", marginBottom: "4px" }}>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "var(--color-navy)", marginBottom: "2px" }}>
               Popular Categories
             </h2>
-            <p style={{ fontSize: "0.9rem", color: "var(--color-text-secondary)" }}>
-              Explore top rated tech discovered directly across Amazon India and Flipkart.
+            <p style={{ fontSize: "0.86rem", color: "var(--color-text-secondary)" }}>
+              Browse frequently searched consumer hardware discovered directly across retailers.
             </p>
           </div>
           <button
             type="button"
             onClick={() => onTabChange("explore")}
             style={{
-              fontSize: "0.88rem",
+              fontSize: "0.84rem",
               fontWeight: "600",
               color: "var(--color-royal-blue)",
-              display: "flex",
+              display: "inline-flex",
               alignItems: "center",
               gap: "4px",
             }}
           >
             <span>View all</span>
-            <ArrowRight size={15} />
+            <ArrowRight size={14} />
           </button>
         </div>
 
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))",
-            gap: "16px",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: "14px",
           }}
         >
           {POPULAR_CATEGORIES.map((cat) => (
             <div
               key={cat.id}
-              onClick={() => handleChipClick(cat.name)}
+              onClick={() => handleChipClick(cat.query)}
               className="card-clean"
               style={{
-                padding: "20px",
+                padding: "16px",
                 display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
+                alignItems: "center",
                 gap: "14px",
                 cursor: "pointer",
-                borderRadius: "var(--radius-lg)",
+                borderRadius: "var(--radius-md)",
                 transition: "all var(--transition-fast)",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = "var(--color-royal-blue)";
-                e.currentTarget.style.transform = "translateY(-3px)";
+                e.currentTarget.style.backgroundColor = "#FFFFFF";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.borderColor = "var(--color-border)";
-                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.backgroundColor = "var(--color-white)";
               }}
             >
               <div
                 style={{
-                  width: "44px",
-                  height: "44px",
-                  borderRadius: "12px",
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "var(--radius-md)",
                   backgroundColor: "var(--color-royal-blue-light)",
                   color: "var(--color-royal-blue)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  flexShrink: 0,
                 }}
               >
                 {cat.icon}
               </div>
 
               <div>
-                <h4 style={{ fontSize: "1.05rem", fontWeight: "700", color: "var(--color-navy)", marginBottom: "3px" }}>
+                <h4 style={{ fontSize: "0.92rem", fontWeight: "600", color: "var(--color-navy)", marginBottom: "2px" }}>
                   {cat.name}
                 </h4>
-                <span style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)" }}>
-                  {cat.count}
+                <span style={{ fontSize: "0.78rem", color: "var(--color-text-secondary)" }}>
+                  {cat.desc}
                 </span>
               </div>
             </div>
@@ -502,40 +497,40 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
       </section>
 
-      {/* 3. Recommended Products Grid (Real Data) */}
+      {/* 3. Recommended Products Grid (Real Discovered Items) */}
       {recommendedProducts.length > 0 && (
         <section>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "20px" }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "16px" }}>
             <div>
-              <h2 style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--color-navy)", marginBottom: "4px" }}>
-                Recommended For You
+              <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "var(--color-navy)", marginBottom: "2px" }}>
+                Recently Discovered Products
               </h2>
-              <p style={{ fontSize: "0.9rem", color: "var(--color-text-secondary)" }}>
-                Ranked using our multi-dimensional AI scoring engine based on specs, price, and reviews.
+              <p style={{ fontSize: "0.86rem", color: "var(--color-text-secondary)" }}>
+                Live items retrieved directly from retailer search results with normalized specifications.
               </p>
             </div>
             <button
               type="button"
               onClick={() => onTabChange("explore")}
               style={{
-                fontSize: "0.88rem",
+                fontSize: "0.84rem",
                 fontWeight: "600",
                 color: "var(--color-royal-blue)",
-                display: "flex",
+                display: "inline-flex",
                 alignItems: "center",
                 gap: "4px",
               }}
             >
               <span>Explore all</span>
-              <ArrowRight size={15} />
+              <ArrowRight size={14} />
             </button>
           </div>
 
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-              gap: "24px",
+              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+              gap: "20px",
             }}
           >
             {recommendedProducts.slice(0, 4).map((product) => (
@@ -552,22 +547,22 @@ export const HomePage: React.FC<HomePageProps> = ({
         </section>
       )}
 
-      {/* 4. Shop By Need */}
+      {/* 4. Shop By Need / Decision Scenarios */}
       <section>
-        <div style={{ marginBottom: "20px" }}>
-          <h2 style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--color-navy)", marginBottom: "4px" }}>
-            Shop by Need
+        <div style={{ marginBottom: "16px" }}>
+          <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "var(--color-navy)", marginBottom: "2px" }}>
+            Shop by Requirement
           </h2>
-          <p style={{ fontSize: "0.9rem", color: "var(--color-text-secondary)" }}>
-            Find curated gear designed specifically for your daily lifestyle and productivity goals.
+          <p style={{ fontSize: "0.86rem", color: "var(--color-text-secondary)" }}>
+            Curated queries structured around specific lifestyle and technical requirements.
           </p>
         </div>
 
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-            gap: "20px",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: "16px",
           }}
         >
           {SHOP_BY_NEED.map((need, i) => (
@@ -576,29 +571,27 @@ export const HomePage: React.FC<HomePageProps> = ({
               onClick={() => handleChipClick(need.query)}
               className="card-clean"
               style={{
-                padding: "24px",
+                padding: "20px",
                 display: "flex",
                 flexDirection: "column",
                 cursor: "pointer",
-                borderRadius: "var(--radius-lg)",
+                borderRadius: "var(--radius-md)",
                 transition: "all var(--transition-fast)",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = "var(--color-royal-blue)";
-                e.currentTarget.style.transform = "translateY(-3px)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.borderColor = "var(--color-border)";
-                e.currentTarget.style.transform = "translateY(0)";
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
                 <div
                   style={{
-                    width: "42px",
-                    height: "42px",
-                    borderRadius: "10px",
-                    backgroundColor: "#F8FAFC",
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "var(--radius-sm)",
+                    backgroundColor: "var(--color-bg-subtle)",
                     border: "1px solid var(--color-border)",
                     display: "flex",
                     alignItems: "center",
@@ -609,11 +602,11 @@ export const HomePage: React.FC<HomePageProps> = ({
                 </div>
                 <span
                   style={{
-                    fontSize: "0.74rem",
-                    fontWeight: "700",
-                    padding: "3px 8px",
-                    borderRadius: "var(--radius-full)",
-                    backgroundColor: "#F1F5F9",
+                    fontSize: "0.72rem",
+                    fontWeight: "600",
+                    padding: "2px 6px",
+                    borderRadius: "var(--radius-xs)",
+                    backgroundColor: "var(--color-bg-subtle)",
                     color: "var(--color-navy)",
                   }}
                 >
@@ -621,10 +614,10 @@ export const HomePage: React.FC<HomePageProps> = ({
                 </span>
               </div>
 
-              <h4 style={{ fontSize: "1.1rem", fontWeight: "700", color: "var(--color-navy)", marginBottom: "8px" }}>
+              <h4 style={{ fontSize: "0.98rem", fontWeight: "600", color: "var(--color-navy)", marginBottom: "6px" }}>
                 {need.title}
               </h4>
-              <p style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)", lineHeight: "1.5", marginBottom: "16px", flex: 1 }}>
+              <p style={{ fontSize: "0.82rem", color: "var(--color-text-secondary)", lineHeight: "1.5", marginBottom: "14px", flex: 1 }}>
                 {need.desc}
               </p>
 
@@ -632,53 +625,53 @@ export const HomePage: React.FC<HomePageProps> = ({
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "6px",
-                  fontSize: "0.84rem",
+                  gap: "5px",
+                  fontSize: "0.82rem",
                   fontWeight: "600",
                   color: "var(--color-royal-blue)",
                 }}
               >
-                <span>Find matches</span>
-                <ArrowRight size={14} />
+                <span>Search scenario</span>
+                <ArrowRight size={13} />
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* 5. Why ShopSmart? (4 Feature Cards) */}
+      {/* 5. Why ShopSmart — Grounded Engineering Principles */}
       <section
         style={{
           backgroundColor: "var(--color-white)",
           border: "1px solid var(--color-border)",
-          borderRadius: "var(--radius-xl)",
-          padding: "48px 36px",
-          boxShadow: "var(--shadow-sm)",
+          borderRadius: "var(--radius-lg)",
+          padding: "36px 30px",
+          boxShadow: "var(--shadow-xs)",
         }}
       >
-        <div style={{ textAlign: "center", maxWidth: "600px", margin: "0 auto 40px auto" }}>
-          <h2 style={{ fontSize: "1.8rem", fontWeight: "800", color: "var(--color-navy)", marginBottom: "8px" }}>
-            Why ShopSmart?
+        <div style={{ maxWidth: "560px", marginBottom: "32px" }}>
+          <h2 style={{ fontSize: "1.35rem", fontWeight: "700", color: "var(--color-navy)", marginBottom: "6px" }}>
+            Engineered for Informed Buying Decisions
           </h2>
-          <p style={{ fontSize: "0.95rem", color: "var(--color-text-secondary)" }}>
-            Engineered to remove buyer hesitation with transparent comparisons, grounded data, and clear explanations.
+          <p style={{ fontSize: "0.88rem", color: "var(--color-text-secondary)" }}>
+            ShopSmart replaces endless browser tabs with verified specifications, objective score breakdowns, and transparent retailer pricing.
           </p>
         </div>
 
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: "28px",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: "24px",
           }}
         >
-          {/* 1. Natural Language Discovery */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {/* 1. Natural Language Intent Parsing */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <div
               style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "12px",
+                width: "36px",
+                height: "36px",
+                borderRadius: "var(--radius-sm)",
                 backgroundColor: "var(--color-royal-blue-light)",
                 color: "var(--color-royal-blue)",
                 display: "flex",
@@ -686,23 +679,23 @@ export const HomePage: React.FC<HomePageProps> = ({
                 justifyContent: "center",
               }}
             >
-              <Sparkles size={22} />
+              <Search size={18} />
             </div>
-            <h4 style={{ fontSize: "1.05rem", fontWeight: "700", color: "var(--color-navy)" }}>
-              Natural Language Discovery
+            <h4 style={{ fontSize: "0.95rem", fontWeight: "600", color: "var(--color-navy)" }}>
+              Natural Language Parsing
             </h4>
-            <p style={{ fontSize: "0.86rem", color: "var(--color-text-secondary)", lineHeight: "1.6" }}>
-              Search just like you talk. Ask for "laptop with 16GB RAM for Python under ₹60,000" and our AI parses your intent into precise search parameters.
+            <p style={{ fontSize: "0.82rem", color: "var(--color-text-secondary)", lineHeight: "1.5" }}>
+              Describe technical constraints and budget limits in everyday words. ShopSmart extracts structured criteria automatically.
             </p>
           </div>
 
-          {/* 2. Smart Product Matching */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {/* 2. Specification-Grounded Scoring */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <div
               style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "12px",
+                width: "36px",
+                height: "36px",
+                borderRadius: "var(--radius-sm)",
                 backgroundColor: "var(--color-green-light)",
                 color: "var(--color-green)",
                 display: "flex",
@@ -710,47 +703,47 @@ export const HomePage: React.FC<HomePageProps> = ({
                 justifyContent: "center",
               }}
             >
-              <TrendingUp size={22} />
+              <TrendingUp size={18} />
             </div>
-            <h4 style={{ fontSize: "1.05rem", fontWeight: "700", color: "var(--color-navy)" }}>
-              Smart Product Matching
+            <h4 style={{ fontSize: "0.95rem", fontWeight: "600", color: "var(--color-navy)" }}>
+              Objective Match Scoring
             </h4>
-            <p style={{ fontSize: "0.86rem", color: "var(--color-text-secondary)", lineHeight: "1.6" }}>
-              Every product receives an objective match score (0-100) calculated from verified hardware specifications, customer ratings, and budget fit.
+            <p style={{ fontSize: "0.82rem", color: "var(--color-text-secondary)", lineHeight: "1.5" }}>
+              Scores are calculated deterministically from verified specs, price position, and Bayesian rating confidence.
             </p>
           </div>
 
-          {/* 3. Easy Product Comparison */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {/* 3. Multi-Product Side-by-Side Matrix */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <div
               style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "12px",
-                backgroundColor: "var(--color-lavender)",
+                width: "36px",
+                height: "36px",
+                borderRadius: "var(--radius-sm)",
+                backgroundColor: "var(--color-purple-light)",
                 color: "var(--color-purple)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Sliders size={22} />
+              <Sliders size={18} />
             </div>
-            <h4 style={{ fontSize: "1.05rem", fontWeight: "700", color: "var(--color-navy)" }}>
-              Easy Product Comparison
+            <h4 style={{ fontSize: "0.95rem", fontWeight: "600", color: "var(--color-navy)" }}>
+              Side-by-Side Comparison
             </h4>
-            <p style={{ fontSize: "0.86rem", color: "var(--color-text-secondary)", lineHeight: "1.6" }}>
-              Queue up to 6 products from Amazon India and Flipkart side by side. Highlights lowest prices, standout features, and key trade-offs.
+            <p style={{ fontSize: "0.82rem", color: "var(--color-text-secondary)", lineHeight: "1.5" }}>
+              Queue candidate products into a unified specification matrix to evaluate price differences and trade-offs.
             </p>
           </div>
 
-          {/* 4. Budget-Aware Shopping */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {/* 4. Strict Budget Filtering */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <div
               style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "12px",
+                width: "36px",
+                height: "36px",
+                borderRadius: "var(--radius-sm)",
                 backgroundColor: "var(--color-orange-light)",
                 color: "var(--color-orange)",
                 display: "flex",
@@ -758,13 +751,13 @@ export const HomePage: React.FC<HomePageProps> = ({
                 justifyContent: "center",
               }}
             >
-              <DollarSign size={22} />
+              <DollarSign size={18} />
             </div>
-            <h4 style={{ fontSize: "1.05rem", fontWeight: "700", color: "var(--color-navy)" }}>
-              Budget-Aware Shopping
+            <h4 style={{ fontSize: "0.95rem", fontWeight: "600", color: "var(--color-navy)" }}>
+              Strict Budget Enforcement
             </h4>
-            <p style={{ fontSize: "0.86rem", color: "var(--color-text-secondary)", lineHeight: "1.6" }}>
-              Hard budget limits automatically filter out items above your threshold, preventing buyers remorse and ensuring realistic choices.
+            <p style={{ fontSize: "0.82rem", color: "var(--color-text-secondary)", lineHeight: "1.5" }}>
+              Hard price limits automatically filter out listings outside your target threshold, ensuring realistic options.
             </p>
           </div>
         </div>

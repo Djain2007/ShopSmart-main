@@ -179,14 +179,14 @@ Rules:
         t0 = time.perf_counter()
         req_id = f"rank-{uuid.uuid4().hex[:12]}"
 
-        # Deduplicate & cap to top candidate items (max 5-6 to ensure fast reasoning response & strict cost control)
+        # Deduplicate & cap to top candidate items (max 3 to ensure fast reasoning response & prevent client timeouts)
         seen_ids = set()
         candidate_products: List[Product] = []
         for p in products:
             if p.id not in seen_ids:
                 seen_ids.add(p.id)
                 candidate_products.append(p)
-            if len(candidate_products) >= min(top_k, 5):
+            if len(candidate_products) >= min(top_k, 3):
                 break
 
         # Prepare compact product summary payloads (DO NOT send bloated payloads to LLM)
@@ -199,7 +199,7 @@ Rules:
             bullets = [e.text for e in p.feature_evidence[:2]]
             prod_summaries.append({
                 "id": p.id,
-                "title": p.title[:90],
+                "title": p.title[:80],
                 "brand": p.brand or "Unknown",
                 "price": price_str,
                 "rating": rating_str,
@@ -208,9 +208,9 @@ Rules:
             })
 
         prompt = (
-            f"Evaluate and rank these candidate products for user shopping query '{plan.original_query}':\n"
-            + json.dumps(prod_summaries, indent=1) + "\n\n"
-            "Be extremely concise. Return strictly valid JSON matching this schema:\n"
+            f"Query: \"{plan.original_query}\"\n"
+            f"Candidates: {json.dumps(prod_summaries, separators=(',', ':'))}\n\n"
+            "Evaluate candidates and return strictly valid JSON matching this schema:\n"
             "{\n"
             '  "overall_summary": "1 concise sentence overview of recommendations",\n'
             '  "ranked": [\n'
@@ -224,7 +224,7 @@ Rules:
             '    }\n'
             '  ]\n'
             "}\n"
-            "CRITICAL: Reference only real candidate IDs. Output strictly JSON without markdown fences."
+            "CRITICAL: Reference only real candidate IDs. Output strictly JSON without markdown."
         )
 
         messages = [
@@ -234,13 +234,14 @@ Rules:
 
         try:
             ranking_timeout = getattr(settings, "scalemax_ranking_timeout", 10.0)
-            raw_json = await self.client.complete_json(
+            raw_json, sm_timings = await self.client.complete_json_with_timings(
                 messages=messages,
-                max_tokens=2200,
+                max_tokens=600,
                 temperature=0.1,
                 timeout=ranking_timeout,
+                correlation_id=req_id,
             )
-            latency_ms = int((time.perf_counter() - t0) * 1000)
+            t_join_start = time.perf_counter()
 
             ranked_items: List[RankedProduct] = []
             returned_ranked = (
@@ -253,10 +254,18 @@ Rules:
             for r in returned_ranked:
                 if not isinstance(r, dict):
                     continue
-                pid = r.get("product_id") or r.get("id") or r.get("productId")
-                if pid not in prod_map:
+                raw_pid = r.get("product_id") or r.get("id") or r.get("productId")
+                if not raw_pid:
+                    continue
+                pid_str = str(raw_pid).strip()
+                if pid_str in prod_map:
+                    matched_id = pid_str
+                else:
+                    matched_id = next((k for k in prod_map if k.endswith(f":{pid_str}") or k.split(":")[-1] == pid_str), None)
+                if not matched_id:
                     continue
 
+                pid = matched_id
                 orig_p = prod_map[pid]
                 score_val = max(0.0, min(100.0, float(r.get("score", 70.0))))
                 conf = r.get("confidence")
@@ -302,6 +311,17 @@ Rules:
                 ))
                 assigned_rank += 1
 
+            join_ms = int((time.perf_counter() - t_join_start) * 1000)
+            latency_ms = int((time.perf_counter() - t0) * 1000)
+
+            detailed_timings = {
+                "correlation_id": req_id,
+                "model_completion_ms": sm_timings.get("model_completion_ms", latency_ms),
+                "ranking_response_parse_ms": sm_timings.get("response_parsing_ms", 0),
+                "product_ranking_and_joining_ms": join_ms,
+                "total_ai_latency_ms": latency_ms,
+            }
+
             meta = Meta(
                 schema_version="1.0",
                 backend="scalemax",
@@ -319,6 +339,9 @@ Rules:
                 returned=len(ranked_items),
             )
 
+            # Store detailed timings in notes field for upstream extraction
+            notes_payload = [json.dumps({"scalemax_detailed_timings": detailed_timings})]
+
             return RankResponse(
                 request_id=req_id,
                 ranked=ranked_items,
@@ -326,7 +349,7 @@ Rules:
                 counts=counts,
                 overall_summary=raw_json.get("overall_summary"),
                 insufficient_evidence=False,
-                notes=[],
+                notes=notes_payload,
                 meta=meta,
             )
 

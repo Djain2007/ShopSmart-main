@@ -10,9 +10,8 @@ Set-Location $WorkspaceRoot
 
 # Check virtual environment
 if (-not (Test-Path ".venv\Scripts\python.exe")) {
-    Write-Host "Virtual environment .venv not found. Creating..." -ForegroundColor Yellow
     python -m venv .venv
-    & .venv\Scripts\pip.exe install -r backend\requirements.txt
+    & .venv\Scripts\python.exe -m pip install -r backend\requirements.txt
 }
 
 # Run FastAPI backend with Uvicorn

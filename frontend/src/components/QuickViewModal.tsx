@@ -5,8 +5,10 @@ import {
   ExternalLink,
   Heart,
   Scale,
-  Sparkles,
   Check,
+  CheckCircle2,
+  AlertTriangle,
+  Info,
 } from "lucide-react";
 import type { UnifiedProduct } from "../types";
 
@@ -46,35 +48,36 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
       style={{
         position: "fixed",
         inset: 0,
-        backgroundColor: "rgba(16, 24, 47, 0.6)",
-        backdropFilter: "blur(6px)",
+        backgroundColor: "rgba(15, 23, 42, 0.45)",
+        backdropFilter: "blur(4px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         zIndex: 1200,
-        padding: "20px",
-        animation: "fadeIn 0.2s ease-out",
+        padding: "16px",
+        animation: "fadeIn 0.18s ease-out",
       }}
       onClick={onClose}
     >
       <div
         className="card-clean"
         style={{
-          maxWidth: "880px",
+          maxWidth: "840px",
           width: "100%",
           maxHeight: "90vh",
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
+          borderRadius: "var(--radius-lg)",
           boxShadow: "var(--shadow-xl)",
-          animation: "popIn 0.22s ease-out",
+          animation: "popIn 0.2s ease-out",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
           style={{
-            padding: "16px 24px",
+            padding: "14px 20px",
             borderBottom: "1px solid var(--color-border)",
             display: "flex",
             alignItems: "center",
@@ -82,14 +85,13 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
             backgroundColor: "#FFFFFF",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span className={`badge-clean ${product.source === "amazon.in" ? "badge-amazon" : "badge-flipkart"}`}>
               {product.source === "amazon.in" ? "Amazon India" : "Flipkart"}
             </span>
             {product.score !== undefined && (
               <span className="badge-clean badge-blue">
-                <Sparkles size={12} />
-                Match Score: {Math.round(product.score)}/100
+                Match: {Math.round(product.score)}%
               </span>
             )}
           </div>
@@ -97,10 +99,11 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close product view"
             style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "50%",
+              width: "28px",
+              height: "28px",
+              borderRadius: "var(--radius-sm)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -111,18 +114,18 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-bg-muted)")}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         {/* Modal Body */}
         <div
           style={{
-            padding: "28px 24px",
+            padding: "24px 20px",
             overflowY: "auto",
             display: "grid",
-            gridTemplateColumns: "minmax(260px, 340px) 1fr",
-            gap: "32px",
+            gridTemplateColumns: "minmax(240px, 320px) 1fr",
+            gap: "28px",
           }}
         >
           {/* Left Column: Image & Quick Actions */}
@@ -130,15 +133,15 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
             <div
               style={{
                 width: "100%",
-                height: "300px",
+                height: "280px",
                 backgroundColor: "#F8FAFC",
                 border: "1px solid var(--color-border)",
-                borderRadius: "var(--radius-lg)",
-                padding: "20px",
+                borderRadius: "var(--radius-md)",
+                padding: "16px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                marginBottom: "20px",
+                marginBottom: "16px",
               }}
             >
               {product.image_url ? (
@@ -152,14 +155,14 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                   }}
                 />
               ) : (
-                <span style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>
+                <span style={{ fontSize: "0.82rem", color: "var(--color-text-muted)" }}>
                   Photo unavailable
                 </span>
               )}
             </div>
 
             {/* Actions: Save & Compare */}
-            <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
+            <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
               <button
                 type="button"
                 onClick={() => onToggleCompare(product)}
@@ -169,9 +172,9 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "6px",
-                  padding: "10px 14px",
+                  padding: "9px 12px",
                   borderRadius: "var(--radius-md)",
-                  fontSize: "0.86rem",
+                  fontSize: "0.82rem",
                   fontWeight: "600",
                   backgroundColor: isSelectedForCompare ? "var(--color-royal-blue)" : "#FFFFFF",
                   color: isSelectedForCompare ? "#FFFFFF" : "var(--color-navy)",
@@ -182,12 +185,12 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
               >
                 {isSelectedForCompare ? (
                   <>
-                    <Check size={16} />
+                    <Check size={14} />
                     <span>Compared</span>
                   </>
                 ) : (
                   <>
-                    <Scale size={16} />
+                    <Scale size={14} />
                     <span>Compare</span>
                   </>
                 )}
@@ -200,7 +203,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  padding: "10px 14px",
+                  padding: "9px 12px",
                   borderRadius: "var(--radius-md)",
                   border: "1px solid var(--color-border)",
                   backgroundColor: product.is_saved ? "var(--color-rose-light)" : "#FFFFFF",
@@ -210,7 +213,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 }}
                 title={product.is_saved ? "Remove from wishlist" : "Add to wishlist"}
               >
-                <Heart size={18} fill={product.is_saved ? "var(--color-rose)" : "none"} />
+                <Heart size={16} fill={product.is_saved ? "var(--color-rose)" : "none"} />
               </button>
             </div>
 
@@ -222,24 +225,25 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
               style={{
                 width: "100%",
                 textDecoration: "none",
-                fontSize: "0.9rem",
+                fontSize: "0.85rem",
+                padding: "9px 14px",
               }}
             >
               <span>View on {product.source === "amazon.in" ? "Amazon.in" : "Flipkart"}</span>
-              <ExternalLink size={15} />
+              <ExternalLink size={14} />
             </a>
           </div>
 
-          {/* Right Column: Specifications & AI Analysis */}
+          {/* Right Column: Specifications & Match Analysis */}
           <div>
             {product.brand && (
               <span
                 style={{
-                  fontSize: "0.82rem",
+                  fontSize: "0.76rem",
                   fontWeight: "700",
                   color: "var(--color-royal-blue)",
                   textTransform: "uppercase",
-                  letterSpacing: "0.06em",
+                  letterSpacing: "0.05em",
                   display: "block",
                   marginBottom: "4px",
                 }}
@@ -250,21 +254,21 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
             <h3
               style={{
-                fontSize: "1.25rem",
+                fontSize: "1.15rem",
                 fontWeight: "700",
                 color: "var(--color-navy)",
                 lineHeight: "1.4",
-                marginBottom: "14px",
+                marginBottom: "12px",
               }}
             >
               {product.title}
             </h3>
 
             {/* Price Row */}
-            <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginBottom: "16px" }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginBottom: "14px" }}>
               <span
                 style={{
-                  fontSize: "1.65rem",
+                  fontSize: "1.5rem",
                   fontWeight: "800",
                   color: "var(--color-navy)",
                 }}
@@ -275,7 +279,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
               {listPriceFormatted && (
                 <span
                   style={{
-                    fontSize: "0.95rem",
+                    fontSize: "0.88rem",
                     color: "var(--color-text-muted)",
                     textDecoration: "line-through",
                   }}
@@ -292,7 +296,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
             </div>
 
             {/* Rating & Reviews */}
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "18px" }}>
               {product.rating !== null ? (
                 <div
                   style={{
@@ -302,55 +306,55 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                     backgroundColor: "var(--color-green-light)",
                     color: "var(--color-green)",
                     border: "1px solid var(--color-green-border)",
-                    padding: "3px 8px",
+                    padding: "2px 7px",
                     borderRadius: "var(--radius-sm)",
-                    fontSize: "0.82rem",
+                    fontSize: "0.78rem",
                     fontWeight: "700",
                   }}
                 >
-                  <Star size={13} fill="currentColor" />
+                  <Star size={12} fill="currentColor" />
                   <span>{product.rating.toFixed(1)}</span>
                 </div>
               ) : (
-                <span style={{ fontSize: "0.82rem", color: "var(--color-text-muted)" }}>
+                <span style={{ fontSize: "0.78rem", color: "var(--color-text-muted)" }}>
                   Unrated
                 </span>
               )}
 
               {product.review_count !== null && (
-                <span style={{ fontSize: "0.82rem", color: "var(--color-text-secondary)" }}>
+                <span style={{ fontSize: "0.78rem", color: "var(--color-text-secondary)" }}>
                   {product.review_count.toLocaleString("en-IN")} customer ratings
                 </span>
               )}
             </div>
 
-            {/* AI Explanation Pill */}
+            {/* Grounded Match Analysis */}
             {product.explanation && (
               <div
                 style={{
                   backgroundColor: "var(--color-lavender)",
                   border: "1px solid var(--color-lavender-border)",
                   borderRadius: "var(--radius-md)",
-                  padding: "16px",
-                  marginBottom: "20px",
+                  padding: "14px",
+                  marginBottom: "18px",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-                  <Sparkles size={16} color="var(--color-purple)" />
-                  <span style={{ fontSize: "0.88rem", fontWeight: "700", color: "var(--color-purple)" }}>
-                    AI Grounded Match Analysis
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                  <Info size={14} color="var(--color-purple)" />
+                  <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--color-purple)" }}>
+                    Grounded Match Analysis
                   </span>
                 </div>
-                <p style={{ fontSize: "0.86rem", color: "var(--color-navy)", lineHeight: "1.5", marginBottom: "12px" }}>
+                <p style={{ fontSize: "0.82rem", color: "var(--color-navy)", lineHeight: "1.5", marginBottom: "10px" }}>
                   {product.explanation.summary}
                 </p>
 
                 {product.explanation.pros.length > 0 && (
                   <div style={{ marginBottom: "8px" }}>
-                    <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "var(--color-green)", textTransform: "uppercase" }}>
-                      Key Strengths:
+                    <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--color-green)", textTransform: "uppercase" }}>
+                      Key Strengths
                     </span>
-                    <ul style={{ paddingLeft: "18px", marginTop: "4px", fontSize: "0.82rem", color: "var(--color-text-primary)" }}>
+                    <ul style={{ paddingLeft: "16px", marginTop: "4px", fontSize: "0.8rem", color: "var(--color-text-primary)", display: "flex", flexDirection: "column", gap: "2px" }}>
                       {product.explanation.pros.map((pro, i) => (
                         <li key={i}>{pro}</li>
                       ))}
@@ -360,10 +364,10 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
                 {product.explanation.cons.length > 0 && (
                   <div>
-                    <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "var(--color-orange)", textTransform: "uppercase" }}>
-                      Trade-offs:
+                    <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--color-orange)", textTransform: "uppercase" }}>
+                      Trade-offs
                     </span>
-                    <ul style={{ paddingLeft: "18px", marginTop: "4px", fontSize: "0.82rem", color: "var(--color-text-secondary)" }}>
+                    <ul style={{ paddingLeft: "16px", marginTop: "4px", fontSize: "0.8rem", color: "var(--color-text-secondary)", display: "flex", flexDirection: "column", gap: "2px" }}>
                       {product.explanation.cons.map((con, i) => (
                         <li key={i}>{con}</li>
                       ))}
@@ -373,19 +377,53 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
               </div>
             )}
 
+            {/* Verified Matched Requirements */}
+            {product.matched_features && product.matched_features.length > 0 && (
+              <div style={{ marginBottom: "16px" }}>
+                <span style={{ fontSize: "0.74rem", fontWeight: "700", color: "var(--color-navy)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: "6px" }}>
+                  Verified Features
+                </span>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                  {product.matched_features.map((feat, i) => (
+                    <span key={i} className="badge-clean badge-green" style={{ fontSize: "0.72rem" }}>
+                      <CheckCircle2 size={11} />
+                      {feat}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Unverified Requirements */}
+            {product.unverified_features && product.unverified_features.length > 0 && (
+              <div style={{ marginBottom: "16px" }}>
+                <span style={{ fontSize: "0.74rem", fontWeight: "700", color: "var(--color-orange)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: "6px" }}>
+                  Unverified In Listing
+                </span>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                  {product.unverified_features.map((feat, i) => (
+                    <span key={i} className="badge-clean badge-orange" style={{ fontSize: "0.72rem" }}>
+                      <AlertTriangle size={11} />
+                      {feat}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Key Bullet Points */}
             {product.bullet_points && product.bullet_points.length > 0 && (
               <div>
-                <h5 style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--color-navy)", marginBottom: "10px" }}>
+                <h5 style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--color-navy)", marginBottom: "8px" }}>
                   Product Features & Specifications
                 </h5>
                 <ul
                   style={{
-                    paddingLeft: "18px",
+                    paddingLeft: "16px",
                     display: "flex",
                     flexDirection: "column",
-                    gap: "6px",
-                    fontSize: "0.84rem",
+                    gap: "4px",
+                    fontSize: "0.8rem",
                     color: "var(--color-text-secondary)",
                     lineHeight: "1.5",
                   }}

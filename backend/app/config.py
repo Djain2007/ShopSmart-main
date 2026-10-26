@@ -23,10 +23,10 @@ class Settings:
         
         # Granular configurable timeouts
         self.scalemax_connect_timeout: float = float(os.getenv("SCALEMAX_CONNECT_TIMEOUT", "5.0"))
-        self.scalemax_read_timeout: float = float(os.getenv("SCALEMAX_READ_TIMEOUT", "30.0"))
-        self.scalemax_ranking_timeout: float = float(os.getenv("SCALEMAX_RANKING_TIMEOUT", "8.0"))
-        self.retailer_timeout: float = float(os.getenv("RETAILER_TIMEOUT", "5.0"))
-        self.search_total_deadline: float = float(os.getenv("SEARCH_TOTAL_DEADLINE", "15.0"))
+        self.scalemax_read_timeout: float = float(os.getenv("SCALEMAX_READ_TIMEOUT", "20.0"))
+        self.scalemax_ranking_timeout: float = float(os.getenv("SCALEMAX_RANKING_TIMEOUT", "10.0"))
+        self.retailer_timeout: float = float(os.getenv("RETAILER_TIMEOUT", "7.5"))
+        self.search_total_deadline: float = float(os.getenv("SEARCH_TOTAL_DEADLINE", "18.0"))
         
         origins_env = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000")
         self.cors_origins: List[str] = [o.strip() for o in origins_env.split(",") if o.strip()]

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Star, Heart, Check, Sparkles, Scale, Eye, ExternalLink } from "lucide-react";
+import { Star, Heart, Check, Scale, Eye, ExternalLink, Package } from "lucide-react";
 import type { UnifiedProduct } from "../types";
 
 interface ProductCardProps {
@@ -19,11 +19,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const [imgError, setImgError] = useState(false);
 
-  const priceFormatted = product.price !== null
+  const priceFormatted = product.price !== null && product.price > 0
     ? `₹${product.price.toLocaleString("en-IN")}`
     : "Price Unavailable";
 
-  const listPriceFormatted = product.list_price !== null
+  const listPriceFormatted = product.list_price !== null && product.list_price > (product.price ?? 0)
     ? `₹${product.list_price.toLocaleString("en-IN")}`
     : null;
 
@@ -31,93 +31,122 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     ? Math.round(((product.list_price - product.price) / product.list_price) * 100)
     : null;
 
-  const matchPercent = product.score !== undefined
-    ? Math.min(100, Math.max(0, Math.round(product.score)))
-    : null;
+  const hasScore = product.score !== undefined && product.score !== null;
 
   return (
-    <div
+    <article
       className="card-clean"
       style={{
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        borderRadius: "var(--radius-lg)",
-        overflow: "hidden",
+        borderRadius: "var(--radius-md)",
+        border: isSelectedForCompare
+          ? "1px solid var(--color-royal-blue)"
+          : "1px solid var(--color-border)",
+        boxShadow: isSelectedForCompare
+          ? "0 0 0 2px rgba(37, 99, 235, 0.15), var(--shadow-xs)"
+          : "var(--shadow-xs)",
+        backgroundColor: "var(--color-white)",
+        padding: "14px",
+        transition: "border-color var(--transition-fast), box-shadow var(--transition-fast)",
         position: "relative",
-        border: isSelectedForCompare ? "2px solid var(--color-royal-blue)" : "1px solid var(--color-border)",
-        boxShadow: isSelectedForCompare ? "0 4px 16px rgba(37, 99, 235, 0.18)" : "var(--shadow-sm)",
+      }}
+      onMouseEnter={(e) => {
+        if (!isSelectedForCompare) {
+          e.currentTarget.style.borderColor = "var(--color-border-hover)";
+          e.currentTarget.style.boxShadow = "var(--shadow-sm)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isSelectedForCompare) {
+          e.currentTarget.style.borderColor = "var(--color-border)";
+          e.currentTarget.style.boxShadow = "var(--shadow-xs)";
+        }
       }}
     >
-      {/* Top Tag Row: Retailer & Wishlist */}
+      {/* Top Meta Header: Retailer Tag, Score & Wishlist Toggle */}
       <div
         style={{
-          position: "absolute",
-          top: "12px",
-          left: "12px",
-          right: "12px",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          zIndex: 2,
+          marginBottom: "12px",
+          gap: "8px",
         }}
       >
-        <span
-          className={`badge-clean ${product.source === "amazon.in" ? "badge-amazon" : "badge-flipkart"}`}
-          style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
-        >
-          {product.source === "amazon.in" ? "Amazon.in" : "Flipkart"}
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+          <span
+            className={`badge-clean ${product.source === "amazon.in" ? "badge-amazon" : "badge-flipkart"}`}
+          >
+            {product.source === "amazon.in" ? "Amazon India" : "Flipkart"}
+          </span>
 
-        {/* Wishlist Heart Action */}
+          {hasScore && (
+            <span
+              className="badge-clean badge-blue"
+              title="Verified specification and relevance match score"
+            >
+              {Math.round(product.score!)}/100
+            </span>
+          )}
+        </div>
+
+        {/* Wishlist Action */}
         <button
           type="button"
           onClick={() => onToggleSave(product)}
-          title={product.is_saved ? "Remove from Wishlist" : "Save to Wishlist"}
+          aria-label={product.is_saved ? "Remove from saved items" : "Save item for later"}
+          title={product.is_saved ? "Remove from saved items" : "Save item"}
           style={{
-            width: "32px",
-            height: "32px",
-            borderRadius: "50%",
-            backgroundColor: "#FFFFFF",
+            width: "28px",
+            height: "28px",
+            borderRadius: "var(--radius-sm)",
+            backgroundColor: "transparent",
             border: "1px solid var(--color-border)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             cursor: "pointer",
-            boxShadow: "var(--shadow-xs)",
             color: product.is_saved ? "var(--color-rose)" : "var(--color-text-muted)",
             transition: "all var(--transition-fast)",
+            flexShrink: 0,
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "scale(1.08)";
-            e.currentTarget.style.borderColor = "var(--color-rose)";
+            e.currentTarget.style.backgroundColor = "var(--color-rose-light)";
+            e.currentTarget.style.borderColor = "var(--color-rose-border)";
+            e.currentTarget.style.color = "var(--color-rose)";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "scale(1)";
+            e.currentTarget.style.backgroundColor = "transparent";
             e.currentTarget.style.borderColor = "var(--color-border)";
+            e.currentTarget.style.color = product.is_saved ? "var(--color-rose)" : "var(--color-text-muted)";
           }}
         >
-          <Heart size={16} fill={product.is_saved ? "var(--color-rose)" : "none"} />
+          <Heart size={14} fill={product.is_saved ? "var(--color-rose)" : "none"} strokeWidth={2} />
         </button>
       </div>
 
       {/* Product Image Stage */}
       <div
         style={{
-          height: "210px",
+          height: "170px",
           backgroundColor: "#FFFFFF",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: "24px 20px 16px 20px",
-          position: "relative",
-          borderBottom: "1px solid #F1F5F9",
+          padding: "10px",
+          marginBottom: "12px",
+          borderRadius: "var(--radius-sm)",
+          border: "1px solid var(--color-border-subtle)",
+          overflow: "hidden",
         }}
       >
         {product.image_url && !imgError ? (
           <img
             src={product.image_url}
             alt={product.title}
+            loading="lazy"
             onError={() => setImgError(true)}
             style={{
               maxHeight: "100%",
@@ -132,290 +161,270 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: "6px",
+              gap: "4px",
               color: "var(--color-text-muted)",
             }}
           >
-            <Eye size={36} strokeWidth={1.5} />
-            <span style={{ fontSize: "0.75rem" }}>Product Photo</span>
-          </div>
-        )}
-
-        {/* Match Percentage Badge */}
-        {matchPercent !== null && (
-          <div
-            style={{
-              position: "absolute",
-              bottom: "8px",
-              right: "12px",
-              backgroundColor: "rgba(37, 99, 235, 0.95)",
-              color: "#FFFFFF",
-              borderRadius: "var(--radius-full)",
-              padding: "3px 9px",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              fontSize: "0.74rem",
-              fontWeight: "700",
-              boxShadow: "0 2px 6px rgba(37, 99, 235, 0.25)",
-            }}
-          >
-            <Sparkles size={11} fill="#FFFFFF" />
-            <span>{matchPercent}% Match</span>
+            <Package size={28} strokeWidth={1.5} />
+            <span style={{ fontSize: "0.72rem" }}>Listing image unavailable</span>
           </div>
         )}
       </div>
 
-      {/* Card Body */}
-      <div
-        style={{
-          padding: "16px",
-          display: "flex",
-          flexDirection: "column",
-          flex: 1,
-          backgroundColor: "var(--color-white)",
-        }}
-      >
-        {/* Brand & Category Row */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-          <span
-            style={{
-              fontSize: "0.75rem",
-              fontWeight: "700",
-              color: "var(--color-royal-blue)",
-              textTransform: "uppercase",
-              letterSpacing: "0.04em",
-            }}
-          >
-            {product.brand || "Verified Brand"}
-          </span>
-        </div>
+      {/* Brand & Product Title */}
+      <div style={{ marginBottom: "6px" }}>
+        <span
+          style={{
+            fontSize: "0.7rem",
+            fontWeight: "700",
+            color: "var(--color-royal-blue)",
+            textTransform: "uppercase",
+            letterSpacing: "0.04em",
+            display: "block",
+            marginBottom: "3px",
+          }}
+        >
+          {product.brand || "VERIFIED LISTING"}
+        </span>
 
-        {/* Product Title */}
         <h4
           style={{
-            fontSize: "0.92rem",
+            fontSize: "0.88rem",
             fontWeight: "600",
-            lineHeight: "1.4",
+            lineHeight: "1.38",
             color: "var(--color-navy)",
-            marginBottom: "8px",
             display: "-webkit-box",
             WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
-            height: "2.8em",
+            height: "2.76em",
           }}
           title={product.title}
         >
           {product.title}
         </h4>
+      </div>
 
-        {/* Rating and Review Count */}
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
-          {product.rating !== null ? (
+      {/* Rating & Review Count */}
+      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px" }}>
+        {product.rating !== null ? (
+          <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
             <div
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "3px",
+                gap: "2px",
                 backgroundColor: "var(--color-green-light)",
                 color: "var(--color-green)",
                 border: "1px solid var(--color-green-border)",
-                padding: "2px 6px",
-                borderRadius: "var(--radius-sm)",
-                fontSize: "0.74rem",
+                padding: "1px 5px",
+                borderRadius: "var(--radius-xs)",
+                fontSize: "0.72rem",
                 fontWeight: "700",
               }}
             >
-              <Star size={11} fill="currentColor" />
+              <Star size={10} fill="currentColor" strokeWidth={0} />
               <span>{product.rating.toFixed(1)}</span>
             </div>
-          ) : (
-            <span style={{ fontSize: "0.74rem", color: "var(--color-text-muted)" }}>
-              No rating
-            </span>
-          )}
 
-          {product.review_count !== null && (
-            <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-              ({product.review_count.toLocaleString("en-IN")})
-            </span>
-          )}
-        </div>
+            {product.review_count !== null && (
+              <span style={{ fontSize: "0.74rem", color: "var(--color-text-muted)" }}>
+                ({product.review_count.toLocaleString("en-IN")})
+              </span>
+            )}
+          </div>
+        ) : (
+          <span style={{ fontSize: "0.72rem", color: "var(--color-text-muted)" }}>
+            Rating not available
+          </span>
+        )}
+      </div>
 
-        {/* Pricing Row */}
-        <div
+      {/* Pricing Row */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: "6px",
+          marginBottom: "10px",
+          flexWrap: "wrap",
+        }}
+      >
+        <span
           style={{
-            display: "flex",
-            alignItems: "baseline",
-            gap: "8px",
-            marginBottom: "14px",
-            flexWrap: "wrap",
+            fontSize: "1.15rem",
+            fontWeight: "700",
+            color: "var(--color-navy)",
+            letterSpacing: "-0.02em",
           }}
         >
+          {priceFormatted}
+        </span>
+
+        {listPriceFormatted && (
           <span
             style={{
-              fontSize: "1.25rem",
-              fontWeight: "800",
-              color: "var(--color-navy)",
+              fontSize: "0.78rem",
+              color: "var(--color-text-muted)",
+              textDecoration: "line-through",
             }}
           >
-            {priceFormatted}
+            {listPriceFormatted}
           </span>
-
-          {listPriceFormatted && (
-            <span
-              style={{
-                fontSize: "0.82rem",
-                color: "var(--color-text-muted)",
-                textDecoration: "line-through",
-              }}
-            >
-              {listPriceFormatted}
-            </span>
-          )}
-
-          {discountPercent && (
-            <span
-              style={{
-                fontSize: "0.75rem",
-                fontWeight: "700",
-                color: "var(--color-orange)",
-              }}
-            >
-              {discountPercent}% OFF
-            </span>
-          )}
-        </div>
-
-        {/* Feature Evidence Snippet */}
-        {product.bullet_points && product.bullet_points.length > 0 && (
-          <p
-            style={{
-              fontSize: "0.76rem",
-              color: "var(--color-text-secondary)",
-              lineHeight: "1.45",
-              marginBottom: "16px",
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-            }}
-          >
-            {product.bullet_points[0]}
-          </p>
         )}
 
-        {/* Actions Row */}
-        <div
+        {discountPercent && discountPercent > 0 && (
+          <span
+            style={{
+              fontSize: "0.7rem",
+              fontWeight: "700",
+              color: "var(--color-green)",
+              backgroundColor: "var(--color-green-light)",
+              padding: "1px 5px",
+              borderRadius: "var(--radius-xs)",
+            }}
+          >
+            {discountPercent}% OFF
+          </span>
+        )}
+      </div>
+
+      {/* Feature Evidence Snippet */}
+      {product.bullet_points && product.bullet_points.length > 0 && (
+        <p
           style={{
-            marginTop: "auto",
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "8px",
-            paddingTop: "8px",
+            fontSize: "0.74rem",
+            color: "var(--color-text-secondary)",
+            lineHeight: "1.45",
+            marginBottom: "12px",
+            display: "-webkit-box",
+            WebkitLineClamp: 1,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            height: "1.45em",
           }}
+          title={product.bullet_points[0]}
         >
-          {/* Compare Toggle Button */}
-          <button
-            type="button"
-            onClick={() => onToggleCompare(product)}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "5px",
-              padding: "8px 10px",
-              borderRadius: "var(--radius-md)",
-              fontSize: "0.82rem",
-              fontWeight: "600",
-              cursor: "pointer",
-              transition: "all var(--transition-fast)",
-              backgroundColor: isSelectedForCompare ? "var(--color-royal-blue)" : "#F8FAFC",
-              color: isSelectedForCompare ? "#FFFFFF" : "var(--color-navy)",
-              border: isSelectedForCompare ? "1px solid var(--color-royal-blue)" : "1px solid var(--color-border)",
-            }}
-            onMouseEnter={(e) => {
-              if (!isSelectedForCompare) {
-                e.currentTarget.style.backgroundColor = "var(--color-royal-blue-light)";
-                e.currentTarget.style.color = "var(--color-royal-blue)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isSelectedForCompare) {
-                e.currentTarget.style.backgroundColor = "#F8FAFC";
-                e.currentTarget.style.color = "var(--color-navy)";
-              }
-            }}
-          >
-            {isSelectedForCompare ? (
-              <>
-                <Check size={14} />
-                <span>Compared</span>
-              </>
-            ) : (
-              <>
-                <Scale size={14} />
-                <span>Compare</span>
-              </>
-            )}
-          </button>
+          • {product.bullet_points[0]}
+        </p>
+      )}
 
-          {/* Details / Quick View Button */}
-          <button
-            type="button"
-            onClick={() => onQuickView && onQuickView(product)}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "5px",
-              padding: "8px 10px",
-              borderRadius: "var(--radius-md)",
-              fontSize: "0.82rem",
-              fontWeight: "600",
-              cursor: "pointer",
-              backgroundColor: "#FFFFFF",
-              color: "var(--color-navy)",
-              border: "1px solid var(--color-border)",
-              transition: "all var(--transition-fast)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--color-bg-subtle)";
-              e.currentTarget.style.borderColor = "var(--color-border-hover)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#FFFFFF";
-              e.currentTarget.style.borderColor = "var(--color-border)";
-            }}
-          >
-            <Eye size={14} />
-            <span>Details</span>
-          </button>
-        </div>
-
-        {/* View on Retailer direct link */}
-        <a
-          href={product.url}
-          target="_blank"
-          rel="noopener noreferrer"
+      {/* Action Controls */}
+      <div
+        style={{
+          marginTop: "auto",
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "6px",
+          paddingTop: "6px",
+        }}
+      >
+        {/* Compare Action */}
+        <button
+          type="button"
+          onClick={() => onToggleCompare(product)}
           style={{
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
             gap: "5px",
-            marginTop: "8px",
-            fontSize: "0.76rem",
-            color: "var(--color-text-secondary)",
-            transition: "color var(--transition-fast)",
+            padding: "6px 8px",
+            borderRadius: "var(--radius-sm)",
+            fontSize: "0.78rem",
+            fontWeight: "600",
+            cursor: "pointer",
+            transition: "all var(--transition-fast)",
+            backgroundColor: isSelectedForCompare ? "var(--color-royal-blue)" : "var(--color-bg-subtle)",
+            color: isSelectedForCompare ? "#FFFFFF" : "var(--color-navy)",
+            border: isSelectedForCompare ? "1px solid var(--color-royal-blue)" : "1px solid var(--color-border)",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-royal-blue)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
+          onMouseEnter={(e) => {
+            if (!isSelectedForCompare) {
+              e.currentTarget.style.backgroundColor = "var(--color-royal-blue-light)";
+              e.currentTarget.style.color = "var(--color-royal-blue)";
+              e.currentTarget.style.borderColor = "var(--color-royal-blue-border)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isSelectedForCompare) {
+              e.currentTarget.style.backgroundColor = "var(--color-bg-subtle)";
+              e.currentTarget.style.color = "var(--color-navy)";
+              e.currentTarget.style.borderColor = "var(--color-border)";
+            }
+          }}
         >
-          <span>View on {product.source === "amazon.in" ? "Amazon" : "Flipkart"}</span>
-          <ExternalLink size={12} />
-        </a>
+          {isSelectedForCompare ? (
+            <>
+              <Check size={13} strokeWidth={2.5} />
+              <span>Compared</span>
+            </>
+          ) : (
+            <>
+              <Scale size={13} />
+              <span>Compare</span>
+            </>
+          )}
+        </button>
+
+        {/* Quick View Modal Trigger */}
+        <button
+          type="button"
+          onClick={() => onQuickView && onQuickView(product)}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "5px",
+            padding: "6px 8px",
+            borderRadius: "var(--radius-sm)",
+            fontSize: "0.78rem",
+            fontWeight: "600",
+            cursor: "pointer",
+            backgroundColor: "var(--color-white)",
+            color: "var(--color-text-secondary)",
+            border: "1px solid var(--color-border)",
+            transition: "all var(--transition-fast)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "var(--color-bg-subtle)";
+            e.currentTarget.style.borderColor = "var(--color-border-hover)";
+            e.currentTarget.style.color = "var(--color-navy)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "var(--color-white)";
+            e.currentTarget.style.borderColor = "var(--color-border)";
+            e.currentTarget.style.color = "var(--color-text-secondary)";
+          }}
+        >
+          <Eye size={13} />
+          <span>Details</span>
+        </button>
       </div>
-    </div>
+
+      {/* External Direct Retailer Link */}
+      <a
+        href={product.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "4px",
+          marginTop: "8px",
+          paddingTop: "6px",
+          borderTop: "1px solid var(--color-border-subtle)",
+          fontSize: "0.74rem",
+          fontWeight: "500",
+          color: "var(--color-text-muted)",
+          transition: "color var(--transition-fast)",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-royal-blue)")}
+        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-muted)")}
+      >
+        <span>Open on {product.source === "amazon.in" ? "Amazon.in" : "Flipkart"}</span>
+        <ExternalLink size={11} />
+      </a>
+    </article>
   );
 };

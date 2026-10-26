@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from "react";
 import {
   Search,
   X,
-  Sparkles,
   Tag,
   DollarSign,
   Cpu,
@@ -19,6 +18,7 @@ import {
   Terminal,
   ChevronDown,
   ChevronUp,
+  Check,
 } from "lucide-react";
 import type {
   AppSearchResponse,
@@ -39,13 +39,13 @@ interface ExplorePageProps {
   onToggleSave: (product: UnifiedProduct) => void;
 }
 
-const CATEGORY_PILLS = [
-  { id: "all", label: "All Items" },
-  { id: "footwear", label: "Shoes & Footwear" },
-  { id: "earbuds", label: "Earbuds" },
-  { id: "laptops", label: "Laptops" },
+const CATEGORY_OPTIONS = [
+  { id: "all", label: "All Categories" },
+  { id: "footwear", label: "Footwear & Shoes" },
+  { id: "earbuds", label: "Earbuds & Audio" },
+  { id: "laptops", label: "Laptops & PCs" },
   { id: "smartphones", label: "Smartphones" },
-  { id: "headphones", label: "Headphones" },
+  { id: "headphones", label: "Over-Ear Headphones" },
   { id: "smartwatches", label: "Smartwatches" },
   { id: "fashion", label: "Apparel & Fashion" },
 ];
@@ -63,12 +63,12 @@ const DevDiagnosticsBar: React.FC<{
   return (
     <div
       style={{
-        marginTop: "20px",
-        border: "1px dashed var(--color-border)",
+        marginTop: "24px",
+        border: "1px solid var(--color-border)",
         borderRadius: "var(--radius-md)",
-        backgroundColor: "#F8FAFC",
+        backgroundColor: "var(--color-white)",
         padding: "10px 14px",
-        fontSize: "0.8rem",
+        fontSize: "0.78rem",
         color: "var(--color-navy)",
       }}
     >
@@ -84,36 +84,36 @@ const DevDiagnosticsBar: React.FC<{
       >
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <Terminal size={14} color="var(--color-royal-blue)" />
-          <span style={{ fontWeight: "700" }}>Search Pipeline Diagnostics</span>
+          <span style={{ fontWeight: "600" }}>Pipeline Diagnostics</span>
           {diagnostics?.search_id && (
-            <span style={{ fontSize: "0.74rem", color: "var(--color-text-muted)", fontFamily: "monospace" }}>
+            <span style={{ fontSize: "0.72rem", color: "var(--color-text-muted)", fontFamily: "var(--font-mono)" }}>
               [{diagnostics.search_id}]
             </span>
           )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+          <span style={{ fontSize: "0.74rem", color: "var(--color-text-muted)" }}>
             {timings?.total_duration_ms ? `${timings.total_duration_ms}ms total` : ""}
           </span>
-          {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          {isOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </div>
       </div>
 
       {isOpen && (
-        <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "8px", borderTop: "1px solid var(--color-border)", paddingTop: "8px" }}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "14px", fontSize: "0.78rem" }}>
-            <div><strong>Raw Listings:</strong> {diagnostics?.raw_extracted_count ?? "N/A"}</div>
+        <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "8px", borderTop: "1px solid var(--color-border-subtle)", paddingTop: "8px" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", fontSize: "0.76rem" }}>
+            <div><strong>Raw Scraped:</strong> {diagnostics?.raw_extracted_count ?? "N/A"}</div>
             <div><strong>Normalized:</strong> {diagnostics?.normalized_count ?? "N/A"}</div>
             <div><strong>Deduplicated:</strong> {diagnostics?.deduplicated_count ?? "N/A"}</div>
-            <div><strong>Valid (Passed Filters):</strong> {diagnostics?.valid_filtered_count ?? "N/A"}</div>
+            <div><strong>Valid:</strong> {diagnostics?.valid_filtered_count ?? "N/A"}</div>
+            <div><strong>Submitted to AI:</strong> {diagnostics?.submitted_for_ranking_count ?? "N/A"}</div>
             <div><strong>Ranked:</strong> {diagnostics?.ranked_count ?? "N/A"}</div>
-            <div><strong>Returned by Backend:</strong> {diagnostics?.returned_count ?? "N/A"}</div>
-            <div><strong>Visible in UI:</strong> {visibleCount}</div>
+            <div><strong>Returned:</strong> {diagnostics?.returned_count ?? "N/A"}</div>
+            <div><strong>Rendered:</strong> {visibleCount}</div>
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "14px", fontSize: "0.78rem" }}>
-            <div><strong>Retailer Status:</strong> {JSON.stringify(retailerStatus)}</div>
-            <div><strong>Retailer Search Time:</strong> {timings?.retailer_search_ms ?? "N/A"}ms</div>
-            <div><strong>Normalization & Dedup:</strong> {timings?.normalization_and_dedup_ms ?? "N/A"}ms</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", fontSize: "0.76rem", color: "var(--color-text-secondary)" }}>
+            <div><strong>Retailers:</strong> {JSON.stringify(retailerStatus)}</div>
+            <div><strong>Scrape Latency:</strong> {timings?.retailer_search_ms ?? "N/A"}ms</div>
             <div><strong>AI Ranking:</strong> {timings?.ai_ranking_ms ?? "N/A"}ms ({timings?.ai_ranking_status ?? "N/A"})</div>
           </div>
         </div>
@@ -140,28 +140,25 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
   const [minRating, setMinRating] = useState<number>(0);
   const [quickViewProduct, setQuickViewProduct] = useState<UnifiedProduct | null>(null);
 
-  // Synchronize query input and reset category to "all" when search response updates
+  // Synchronize query input and reset filters when fresh search response arrives
   useEffect(() => {
     if (searchResponse?.query) {
       setQueryInput(searchResponse.query);
     }
-    // Always reset local category to "all" when fresh search response arrives
     setSelectedCategory("all");
-  }, [searchResponse]);
+    setMinPrice("");
+    setMaxPrice("");
+    setMinRating(0);
+  }, [searchResponse?.query]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!queryInput.trim() || loading) return;
     setSelectedCategory("all");
+    setMinPrice("");
+    setMaxPrice("");
+    setMinRating(0);
     onSearch(queryInput.trim(), sources);
-  };
-
-  const handleCategoryClick = (catId: string, label: string) => {
-    setSelectedCategory(catId);
-    if (catId !== "all") {
-      setQueryInput(label);
-      onSearch(label, sources);
-    }
   };
 
   const toggleSource = (source: SourceName) => {
@@ -187,7 +184,7 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
         if (maxPrice && p.price !== null && p.price > parseFloat(maxPrice)) return false;
         // Rating filter: unknown ratings (null) do NOT fail rating filters
         if (minRating > 0 && p.rating !== null && p.rating < minRating) return false;
-        // Category pill filter
+        // Category filter
         if (selectedCategory !== "all") {
           const t = p.title.toLowerCase();
           if (selectedCategory === "footwear" && !t.includes("shoe") && !t.includes("sneaker") && !t.includes("running") && !t.includes("boot") && !t.includes("casual")) return false;
@@ -225,26 +222,9 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
           if (b.review_count === null) return -1;
           return b.review_count - a.review_count;
         }
-        // Relevance / AI match score
         return (b.score ?? 0) - (a.score ?? 0);
       });
   }, [allProducts, sources, minPrice, maxPrice, minRating, selectedCategory, sortBy]);
-
-  // Console developer diagnostics in DEV mode
-  useEffect(() => {
-    if (searchResponse && import.meta.env.DEV) {
-      console.debug("[ShopSmart Diagnostics]", {
-        query: searchResponse.query,
-        searchId: searchResponse.timings?.search_id,
-        totalDurationMs: searchResponse.timings?.total_duration_ms,
-        retailerStatus: searchResponse.retailer_status,
-        counts: searchResponse.counts,
-        visibleInUi: filteredProducts.length,
-        aiStatus: searchResponse.ai_status,
-        diagnostics: searchResponse.timings?.diagnostics,
-      });
-    }
-  }, [searchResponse, filteredProducts.length]);
 
   const plan = searchResponse?.search_plan;
   const budget = plan?.constraints?.budget;
@@ -255,6 +235,16 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
   const retailerStatuses = searchResponse?.retailer_status || {};
   const statusValues = Object.values(retailerStatuses);
 
+  const isFilterActive = minPrice !== "" || maxPrice !== "" || minRating > 0 || selectedCategory !== "all" || sources.length < 2;
+
+  const resetAllFilters = () => {
+    setMinPrice("");
+    setMaxPrice("");
+    setMinRating(0);
+    setSelectedCategory("all");
+    setSources(["amazon.in", "flipkart.com"]);
+  };
+
   const renderEmptyOrOutcomeState = () => {
     // 1. Initial State (No search performed yet)
     if (!searchResponse) {
@@ -262,19 +252,19 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
         <div
           className="card-clean"
           style={{
-            padding: "60px 24px",
+            padding: "54px 20px",
             textAlign: "center",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: "14px",
+            gap: "12px",
           }}
         >
           <div
             style={{
-              width: "56px",
-              height: "56px",
-              borderRadius: "50%",
+              width: "48px",
+              height: "48px",
+              borderRadius: "var(--radius-md)",
               backgroundColor: "var(--color-royal-blue-light)",
               color: "var(--color-royal-blue)",
               display: "flex",
@@ -282,38 +272,41 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
               justifyContent: "center",
             }}
           >
-            <ShoppingCart size={28} />
+            <ShoppingCart size={24} />
           </div>
 
-          <h3 style={{ fontSize: "1.2rem", fontWeight: "700", color: "var(--color-navy)" }}>
-            Start searching or pick a category
+          <h3 style={{ fontSize: "1.15rem", fontWeight: "700", color: "var(--color-navy)" }}>
+            Search products in natural language
           </h3>
 
-          <p style={{ fontSize: "0.9rem", color: "var(--color-text-secondary)", maxWidth: "460px" }}>
-            Type what you need in plain words above (e.g. 'gym shoes under 2500' or 'wireless earbuds under 3000') to crawl live listings on Amazon and Flipkart.
+          <p style={{ fontSize: "0.88rem", color: "var(--color-text-secondary)", maxWidth: "440px", lineHeight: "1.5" }}>
+            Enter your desired specifications, price limits, or lifestyle needs to crawl live catalog listings across Amazon India and Flipkart.
           </p>
 
-          <div style={{ display: "flex", gap: "10px", marginTop: "8px", flexWrap: "wrap", justifyContent: "center" }}>
+          <div style={{ display: "flex", gap: "8px", marginTop: "6px", flexWrap: "wrap", justifyContent: "center" }}>
             <button
               type="button"
               onClick={() => onSearch("Gym Shoes under 2500")}
               className="btn-secondary"
+              style={{ fontSize: "0.82rem", padding: "6px 12px" }}
             >
-              Gym Shoes under 2.5k
+              Gym Shoes under ₹2,500
             </button>
             <button
               type="button"
               onClick={() => onSearch("laptops for coding under 80000")}
               className="btn-secondary"
+              style={{ fontSize: "0.82rem", padding: "6px 12px" }}
             >
-              Coding Laptops under 80k
+              Coding Laptops under ₹80k
             </button>
             <button
               type="button"
               onClick={() => onSearch("wireless noise cancelling earbuds under 3000")}
               className="btn-secondary"
+              style={{ fontSize: "0.82rem", padding: "6px 12px" }}
             >
-              ANC Earbuds under 3k
+              ANC Earbuds under ₹3k
             </button>
           </div>
         </div>
@@ -327,19 +320,19 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
         <div
           className="card-clean"
           style={{
-            padding: "50px 24px",
+            padding: "48px 20px",
             textAlign: "center",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: "14px",
+            gap: "12px",
           }}
         >
           <div
             style={{
-              width: "56px",
-              height: "56px",
-              borderRadius: "50%",
+              width: "48px",
+              height: "48px",
+              borderRadius: "var(--radius-md)",
               backgroundColor: "var(--color-rose-light)",
               color: "var(--color-rose)",
               display: "flex",
@@ -347,24 +340,24 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
               justifyContent: "center",
             }}
           >
-            <ShieldAlert size={28} />
+            <ShieldAlert size={24} />
           </div>
 
-          <h3 style={{ fontSize: "1.2rem", fontWeight: "700", color: "var(--color-navy)" }}>
+          <h3 style={{ fontSize: "1.15rem", fontWeight: "700", color: "var(--color-navy)" }}>
             Retailer Verification Challenge Active
           </h3>
 
-          <p style={{ fontSize: "0.9rem", color: "var(--color-text-secondary)", maxWidth: "480px" }}>
-            Both Amazon India and Flipkart required interactive browser verification (CAPTCHA) to protect against automated queries at this moment. Live products could not be retrieved.
+          <p style={{ fontSize: "0.88rem", color: "var(--color-text-secondary)", maxWidth: "460px", lineHeight: "1.5" }}>
+            Both Amazon India and Flipkart presented interactive human verification challenges. Live listings could not be scraped automatically at this time.
           </p>
 
           <button
             type="button"
             onClick={() => onSearch(queryInput || searchResponse.query, sources)}
             className="btn-primary"
-            style={{ marginTop: "8px" }}
+            style={{ marginTop: "4px" }}
           >
-            <RefreshCw size={15} />
+            <RefreshCw size={14} />
             <span>Retry Search</span>
           </button>
         </div>
@@ -378,45 +371,45 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
         <div
           className="card-clean"
           style={{
-            padding: "50px 24px",
+            padding: "48px 20px",
             textAlign: "center",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: "14px",
+            gap: "12px",
           }}
         >
           <div
             style={{
-              width: "56px",
-              height: "56px",
-              borderRadius: "50%",
-              backgroundColor: "#FEF3C7",
-              color: "#D97706",
+              width: "48px",
+              height: "48px",
+              borderRadius: "var(--radius-md)",
+              backgroundColor: "var(--color-orange-light)",
+              color: "var(--color-orange)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <WifiOff size={28} />
+            <WifiOff size={24} />
           </div>
 
-          <h3 style={{ fontSize: "1.2rem", fontWeight: "700", color: "var(--color-navy)" }}>
-            Retailers Currently Unreachable
+          <h3 style={{ fontSize: "1.15rem", fontWeight: "700", color: "var(--color-navy)" }}>
+            Retailer Endpoints Unreachable
           </h3>
 
-          <p style={{ fontSize: "0.9rem", color: "var(--color-text-secondary)", maxWidth: "480px" }}>
-            Connections to Amazon India and Flipkart search endpoints timed out or failed. Please check your network or try again in a few moments.
+          <p style={{ fontSize: "0.88rem", color: "var(--color-text-secondary)", maxWidth: "460px", lineHeight: "1.5" }}>
+            Connection to retailer search endpoints timed out. Please check your network connection or retry in a few moments.
           </p>
 
           <button
             type="button"
             onClick={() => onSearch(queryInput || searchResponse.query, sources)}
             className="btn-primary"
-            style={{ marginTop: "8px" }}
+            style={{ marginTop: "4px" }}
           >
-            <RefreshCw size={15} />
-            <span>Retry Connection</span>
+            <RefreshCw size={14} />
+            <span>Retry Search</span>
           </button>
         </div>
       );
@@ -428,75 +421,77 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
         <div
           className="card-clean"
           style={{
-            padding: "50px 24px",
+            padding: "48px 20px",
             textAlign: "center",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: "14px",
+            gap: "12px",
           }}
         >
           <div
             style={{
-              width: "56px",
-              height: "56px",
-              borderRadius: "50%",
-              backgroundColor: "#F1F5F9",
+              width: "48px",
+              height: "48px",
+              borderRadius: "var(--radius-md)",
+              backgroundColor: "var(--color-bg-subtle)",
               color: "var(--color-text-secondary)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <SearchX size={28} />
+            <SearchX size={24} />
           </div>
 
-          <h3 style={{ fontSize: "1.2rem", fontWeight: "700", color: "var(--color-navy)" }}>
+          <h3 style={{ fontSize: "1.15rem", fontWeight: "700", color: "var(--color-navy)" }}>
             No products found for "{searchResponse.query}"
           </h3>
 
-          <p style={{ fontSize: "0.9rem", color: "var(--color-text-secondary)", maxWidth: "480px" }}>
-            Live retailers responded but returned no products matching your query or budget constraints. Try simplifying keywords or broadening the budget.
+          <p style={{ fontSize: "0.88rem", color: "var(--color-text-secondary)", maxWidth: "460px", lineHeight: "1.5" }}>
+            Retailers responded but returned no products matching your specific query terms or budget constraints.
           </p>
 
-          <div style={{ display: "flex", gap: "10px", marginTop: "8px", flexWrap: "wrap", justifyContent: "center" }}>
+          <div style={{ display: "flex", gap: "8px", marginTop: "4px", flexWrap: "wrap", justifyContent: "center" }}>
             <button
               type="button"
               onClick={() => onSearch("gym shoes")}
               className="btn-secondary"
+              style={{ fontSize: "0.82rem", padding: "6px 12px" }}
             >
               Search "gym shoes" (Any Budget)
             </button>
             <button
               type="button"
-              onClick={() => onSearch("running shoes under 3000")}
+              onClick={() => onSearch("wireless earbuds")}
               className="btn-secondary"
+              style={{ fontSize: "0.82rem", padding: "6px 12px" }}
             >
-              Search "running shoes under 3000"
+              Search "wireless earbuds"
             </button>
           </div>
         </div>
       );
     }
 
-    // 5. Products retrieved from backend, but filtered out by local frontend filters
+    // 5. Products exist in backend response, but filtered out by user filters
     return (
       <div
         className="card-clean"
         style={{
-          padding: "50px 24px",
+          padding: "48px 20px",
           textAlign: "center",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: "14px",
+          gap: "12px",
         }}
       >
         <div
           style={{
-            width: "56px",
-            height: "56px",
-            borderRadius: "50%",
+            width: "48px",
+            height: "48px",
+            borderRadius: "var(--radius-md)",
             backgroundColor: "var(--color-royal-blue-light)",
             color: "var(--color-royal-blue)",
             display: "flex",
@@ -504,94 +499,85 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
             justifyContent: "center",
           }}
         >
-          <Filter size={28} />
+          <Filter size={24} />
         </div>
 
-        <h3 style={{ fontSize: "1.2rem", fontWeight: "700", color: "var(--color-navy)" }}>
+        <h3 style={{ fontSize: "1.15rem", fontWeight: "700", color: "var(--color-navy)" }}>
           No products match the selected filters
         </h3>
 
-        <p style={{ fontSize: "0.9rem", color: "var(--color-text-secondary)", maxWidth: "480px" }}>
-          We retrieved {allProducts.length} live products for "{searchResponse.query}", but your active filters excluded all of them.
+        <p style={{ fontSize: "0.88rem", color: "var(--color-text-secondary)", maxWidth: "460px", lineHeight: "1.5" }}>
+          We retrieved {allProducts.length} verified products for "{searchResponse.query}", but your active filter settings excluded all of them.
         </p>
 
         <button
           type="button"
-          onClick={() => {
-            setMinPrice("");
-            setMaxPrice("");
-            setMinRating(0);
-            setSelectedCategory("all");
-            setSources(["amazon.in", "flipkart.com"]);
-          }}
+          onClick={resetAllFilters}
           className="btn-primary"
-          style={{ marginTop: "8px" }}
+          style={{ marginTop: "4px" }}
         >
-          <RefreshCw size={15} />
-          <span>Reset All Filters ({allProducts.length} Products Available)</span>
+          <RefreshCw size={14} />
+          <span>Reset Filters ({allProducts.length} Available)</span>
         </button>
       </div>
     );
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      {/* 1. Search & Interpretation Banner */}
+    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+      {/* 1. Search Console Section */}
       <section
         className="card-clean"
         style={{
-          padding: "24px",
-          borderRadius: "var(--radius-xl)",
-          boxShadow: "var(--shadow-md)",
+          padding: "20px 24px",
+          borderRadius: "var(--radius-lg)",
         }}
       >
-        <div style={{ marginBottom: "16px" }}>
-          <h2 style={{ fontSize: "1.45rem", fontWeight: "800", color: "var(--color-navy)", marginBottom: "4px" }}>
+        <div style={{ marginBottom: "14px" }}>
+          <h1 style={{ fontSize: "1.35rem", fontWeight: "700", color: "var(--color-navy)", marginBottom: "3px" }}>
             Explore & Search Products
-          </h2>
-          <p style={{ fontSize: "0.88rem", color: "var(--color-text-secondary)" }}>
-            Search across live Amazon India and Flipkart catalogs with natural language specification extraction.
+          </h1>
+          <p style={{ fontSize: "0.86rem", color: "var(--color-text-secondary)" }}>
+            Natural language shopping across Amazon India and Flipkart with grounded specification parsing.
           </p>
         </div>
 
-        {/* Search Input Bar */}
-        <form onSubmit={handleSearchSubmit} style={{ marginBottom: "16px" }}>
+        {/* Search Bar Form */}
+        <form onSubmit={handleSearchSubmit} style={{ marginBottom: "14px" }}>
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              backgroundColor: "#F8FAFC",
-              border: "2px solid var(--color-border)",
-              borderRadius: "var(--radius-lg)",
-              padding: "6px 8px 6px 16px",
-              boxShadow: "var(--shadow-sm)",
+              backgroundColor: "var(--color-white)",
+              border: "1px solid var(--color-border)",
+              borderRadius: "var(--radius-md)",
+              padding: "4px 6px 4px 12px",
+              boxShadow: "var(--shadow-xs)",
               transition: "border-color var(--transition-fast), box-shadow var(--transition-fast)",
-              gap: "10px",
+              gap: "8px",
             }}
             onFocus={(e) => {
               e.currentTarget.style.borderColor = "var(--color-royal-blue)";
-              e.currentTarget.style.boxShadow = "0 0 0 4px rgba(37, 99, 235, 0.12)";
-              e.currentTarget.style.backgroundColor = "#FFFFFF";
+              e.currentTarget.style.boxShadow = "0 0 0 3px rgba(37, 99, 235, 0.12)";
             }}
             onBlur={(e) => {
               e.currentTarget.style.borderColor = "var(--color-border)";
-              e.currentTarget.style.boxShadow = "var(--shadow-sm)";
-              e.currentTarget.style.backgroundColor = "#F8FAFC";
+              e.currentTarget.style.boxShadow = "var(--shadow-xs)";
             }}
           >
-            <Search size={20} color="var(--color-royal-blue)" style={{ flexShrink: 0 }} />
+            <Search size={18} color="var(--color-royal-blue)" style={{ flexShrink: 0 }} />
             <input
               type="text"
               value={queryInput}
               onChange={(e) => setQueryInput(e.target.value)}
-              placeholder="Search products in plain words (e.g. gym shoes under 2500, laptop for coding under 80000)..."
+              placeholder="Search in plain words (e.g. gym shoes under 2500, laptop with 16GB RAM for coding)..."
               disabled={loading}
               style={{
                 border: "none",
-                background: "none",
+                background: "transparent",
                 outline: "none",
                 width: "100%",
-                fontSize: "1rem",
+                fontSize: "0.92rem",
                 color: "var(--color-text-primary)",
                 fontWeight: "500",
               }}
@@ -601,13 +587,14 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
               <button
                 type="button"
                 onClick={() => setQueryInput("")}
+                aria-label="Clear query input"
                 style={{
                   color: "var(--color-text-muted)",
                   padding: "4px",
                   cursor: "pointer",
                 }}
               >
-                <X size={16} />
+                <X size={15} />
               </button>
             )}
 
@@ -616,14 +603,14 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
               disabled={loading || !queryInput.trim()}
               className="btn-primary"
               style={{
-                padding: "10px 22px",
-                borderRadius: "var(--radius-md)",
+                padding: "8px 18px",
+                borderRadius: "var(--radius-sm)",
                 flexShrink: 0,
               }}
             >
               {loading ? (
                 <>
-                  <Loader2 size={16} className="animate-spin" />
+                  <Loader2 size={15} className="animate-spin" />
                   <span>Searching...</span>
                 </>
               ) : (
@@ -633,111 +620,99 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
           </div>
         </form>
 
-        {/* Retailer Source Toggles */}
+        {/* Source Retailers Controls */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             flexWrap: "wrap",
-            gap: "12px",
+            gap: "10px",
+            fontSize: "0.82rem",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "0.82rem", fontWeight: "600", color: "var(--color-text-secondary)" }}>
-              Retailers:
+            <span style={{ fontWeight: "600", color: "var(--color-text-secondary)" }}>
+              Retailer Discovery:
             </span>
             <button
               type="button"
               onClick={() => toggleSource("amazon.in")}
-              className={`badge-clean ${sources.includes("amazon.in") ? "badge-amazon" : ""}`}
+              className={`badge-clean ${sources.includes("amazon.in") ? "badge-amazon" : "badge-neutral"}`}
               style={{
                 cursor: "pointer",
-                border: sources.includes("amazon.in") ? "1px solid var(--color-amazon-border)" : "1px solid var(--color-border)",
-                backgroundColor: sources.includes("amazon.in") ? "var(--color-amazon-bg)" : "#FFFFFF",
-                opacity: sources.includes("amazon.in") ? 1 : 0.5,
+                opacity: sources.includes("amazon.in") ? 1 : 0.6,
               }}
             >
-              Amazon India
+              {sources.includes("amazon.in") && <Check size={11} strokeWidth={2.5} />}
+              <span>Amazon India</span>
             </button>
             <button
               type="button"
               onClick={() => toggleSource("flipkart.com")}
-              className={`badge-clean ${sources.includes("flipkart.com") ? "badge-flipkart" : ""}`}
+              className={`badge-clean ${sources.includes("flipkart.com") ? "badge-flipkart" : "badge-neutral"}`}
               style={{
                 cursor: "pointer",
-                border: sources.includes("flipkart.com") ? "1px solid var(--color-flipkart-border)" : "1px solid var(--color-border)",
-                backgroundColor: sources.includes("flipkart.com") ? "var(--color-flipkart-bg)" : "#FFFFFF",
-                opacity: sources.includes("flipkart.com") ? 1 : 0.5,
+                opacity: sources.includes("flipkart.com") ? 1 : 0.6,
               }}
             >
-              Flipkart
+              {sources.includes("flipkart.com") && <Check size={11} strokeWidth={2.5} />}
+              <span>Flipkart</span>
             </button>
           </div>
 
-          <span style={{ fontSize: "0.78rem", color: "var(--color-text-muted)" }}>
-            Live dual-retailer scraping with verified specs
+          <span style={{ fontSize: "0.76rem", color: "var(--color-text-muted)" }}>
+            Concurrent live scraping with verified pricing
           </span>
         </div>
 
-        {/* Interpreted Search Intent Chips (if present) */}
+        {/* Extracted Intent Tags (if present in plan) */}
         {plan && (
           <div
             style={{
-              marginTop: "20px",
-              paddingTop: "16px",
-              borderTop: "1px dashed var(--color-border)",
+              marginTop: "14px",
+              paddingTop: "12px",
+              borderTop: "1px solid var(--color-border-subtle)",
               display: "flex",
               alignItems: "center",
-              gap: "8px",
+              gap: "6px",
               flexWrap: "wrap",
             }}
           >
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "4px",
-                fontSize: "0.8rem",
-                fontWeight: "700",
-                color: "var(--color-navy)",
-                marginRight: "4px",
-              }}
-            >
-              <Sparkles size={14} color="var(--color-royal-blue)" />
-              Extracted Intent:
+            <span style={{ fontSize: "0.78rem", fontWeight: "600", color: "var(--color-navy)", marginRight: "4px" }}>
+              Parsed Criteria:
             </span>
 
             {plan.category && (
               <span className="badge-clean badge-blue">
-                <Tag size={12} />
-                Category: {plan.category}
+                <Tag size={11} />
+                {plan.category}
               </span>
             )}
 
             {hasBudget && budget && (
               <span className="badge-clean badge-green">
-                <DollarSign size={12} />
-                Budget: {budget.min ? `₹${budget.min.toLocaleString("en-IN")} - ` : "Up to "}
+                <DollarSign size={11} />
+                {budget.min ? `₹${budget.min.toLocaleString("en-IN")} - ` : "≤ "}
                 {budget.max ? `₹${budget.max.toLocaleString("en-IN")}` : "Any"}
               </span>
             )}
 
             {brands.length > 0 && (
               <span className="badge-clean badge-purple">
-                Brands: {brands.join(", ")}
+                Brand: {brands.join(", ")}
               </span>
             )}
 
             {features.length > 0 && (
               <span className="badge-clean badge-orange">
-                <Cpu size={12} />
-                Target Specs: {features.join(", ")}
+                <Cpu size={11} />
+                {features.join(", ")}
               </span>
             )}
 
             {plan.intended_use && (
-              <span className="badge-clean" style={{ backgroundColor: "#F1F5F9", color: "var(--color-navy)" }}>
+              <span className="badge-clean badge-neutral">
                 Use: {plan.intended_use}
               </span>
             )}
@@ -745,27 +720,47 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
         )}
       </section>
 
-      {/* 2. Partial Results Notice & Warnings */}
+      {/* 2. Retailer Notice & Warnings Banner (Unobtrusive & Clean) */}
       {searchResponse && searchResponse.warnings && searchResponse.warnings.length > 0 && (
         <div
           style={{
-            backgroundColor: "#FFFBEB",
-            border: "1px solid #FDE68A",
+            backgroundColor: "#F8FAFC",
+            border: "1px solid var(--color-border)",
             borderRadius: "var(--radius-md)",
-            padding: "12px 16px",
+            padding: "8px 12px",
             display: "flex",
-            flexDirection: "column",
-            gap: "6px",
-            fontSize: "0.86rem",
-            color: "#92400E",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "8px",
+            fontSize: "0.8rem",
+            color: "var(--color-text-secondary)",
           }}
         >
-          {searchResponse.warnings.map((warn, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Info size={16} color="#D97706" style={{ flexShrink: 0 }} />
-              <span>{warn}</span>
-            </div>
-          ))}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Info size={14} color="var(--color-royal-blue)" style={{ flexShrink: 0 }} />
+            <span>
+              {searchResponse.warnings.find((w) => w.includes("challenge") || w.includes("unreachable") || w.includes("timed out")) ||
+                searchResponse.warnings[0]}
+            </span>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            {statusValues.includes("blocked") && (
+              <span className="badge-clean badge-orange" style={{ fontSize: "0.7rem", padding: "1px 6px" }}>
+                Partial Results
+              </span>
+            )}
+            {searchResponse.ai_status === "ready" ? (
+              <span className="badge-clean badge-green" style={{ fontSize: "0.7rem", padding: "1px 6px" }}>
+                Verified Match
+              </span>
+            ) : (
+              <span className="badge-clean badge-neutral" style={{ fontSize: "0.7rem", padding: "1px 6px" }}>
+                Factual Scoring
+              </span>
+            )}
+          </div>
         </div>
       )}
 
@@ -774,115 +769,131 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
         <div
           style={{
             backgroundColor: "var(--color-rose-light)",
-            border: "1px solid #FECDD3",
+            border: "1px solid var(--color-rose-border)",
             borderRadius: "var(--radius-md)",
-            padding: "14px 18px",
+            padding: "12px 16px",
             display: "flex",
             alignItems: "center",
-            gap: "10px",
+            gap: "8px",
             color: "var(--color-rose)",
-            fontSize: "0.9rem",
+            fontSize: "0.86rem",
           }}
         >
-          <AlertTriangle size={20} style={{ flexShrink: 0 }} />
+          <AlertTriangle size={18} style={{ flexShrink: 0 }} />
           <span>{searchError}</span>
         </div>
       )}
 
-      {/* 4. Category Filter Pills */}
-      <section
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          overflowX: "auto",
-          paddingBottom: "4px",
-        }}
-      >
-        {CATEGORY_PILLS.map((pill) => {
-          const isSelected = selectedCategory === pill.id;
-          return (
-            <button
-              key={pill.id}
-              type="button"
-              onClick={() => handleCategoryClick(pill.id, pill.label)}
-              style={{
-                padding: "8px 18px",
-                borderRadius: "var(--radius-full)",
-                fontSize: "0.85rem",
-                fontWeight: isSelected ? "700" : "500",
-                backgroundColor: isSelected ? "var(--color-royal-blue)" : "var(--color-white)",
-                color: isSelected ? "#FFFFFF" : "var(--color-navy)",
-                border: isSelected ? "1px solid var(--color-royal-blue)" : "1px solid var(--color-border)",
-                boxShadow: isSelected ? "0 2px 8px rgba(37, 99, 235, 0.25)" : "var(--shadow-xs)",
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                transition: "all var(--transition-fast)",
-              }}
-            >
-              {pill.label}
-            </button>
-          );
-        })}
-      </section>
-
-      {/* 5. Filter & Sort Toolbar */}
+      {/* 4. Filter & Sort Toolbar */}
       <section
         className="card-clean"
         style={{
-          padding: "14px 20px",
+          padding: "10px 16px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           flexWrap: "wrap",
-          gap: "16px",
-          borderRadius: "var(--radius-lg)",
+          gap: "12px",
+          borderRadius: "var(--radius-md)",
         }}
       >
-        {/* Left: Result Count */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--color-navy)" }}>
+        {/* Left: Result Count, Timings & Active Filters Indicator */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ fontSize: "0.86rem", fontWeight: "600", color: "var(--color-navy)" }}>
             Showing {filteredProducts.length} {filteredProducts.length === 1 ? "product" : "products"}
           </span>
           {allProducts.length > 0 && filteredProducts.length !== allProducts.length && (
-            <span style={{ fontSize: "0.78rem", color: "var(--color-text-muted)" }}>
-              (filtered from {allProducts.length} retrieved)
+            <span style={{ fontSize: "0.76rem", color: "var(--color-text-muted)" }}>
+              ({allProducts.length} retrieved)
             </span>
+          )}
+
+          {searchResponse?.timings?.total_duration_ms && (
+            <span
+              style={{
+                fontSize: "0.74rem",
+                color: "var(--color-text-muted)",
+                backgroundColor: "var(--color-bg-subtle)",
+                padding: "2px 6px",
+                borderRadius: "var(--radius-xs)",
+                border: "1px solid var(--color-border)",
+              }}
+            >
+              {(searchResponse.timings.total_duration_ms / 1000).toFixed(1)}s
+              {searchResponse.timings.cache_hit && " · cached"}
+            </span>
+          )}
+
+          {isFilterActive && (
+            <button
+              type="button"
+              onClick={resetAllFilters}
+              style={{
+                fontSize: "0.76rem",
+                fontWeight: "600",
+                color: "var(--color-royal-blue)",
+                cursor: "pointer",
+                marginLeft: "4px",
+              }}
+            >
+              Reset
+            </button>
           )}
         </div>
 
-        {/* Right: Price Filters & Sort */}
-        <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
+        {/* Right: Category, Price, Rating, Sort */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+          {/* Category Dropdown */}
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            style={{
+              padding: "5px 10px",
+              border: "1px solid var(--color-border)",
+              borderRadius: "var(--radius-sm)",
+              backgroundColor: "var(--color-white)",
+              color: "var(--color-navy)",
+              fontSize: "0.8rem",
+              fontWeight: "500",
+              cursor: "pointer",
+              outline: "none",
+            }}
+          >
+            {CATEGORY_OPTIONS.map((c) => (
+              <option key={c.id} value={c.id}>{c.label}</option>
+            ))}
+          </select>
+
           {/* Price Range Filter */}
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.82rem" }}>
-            <span style={{ color: "var(--color-text-secondary)" }}>Price:</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "0.8rem" }}>
+            <span style={{ color: "var(--color-text-muted)" }}>₹</span>
             <input
               type="number"
-              placeholder="Min ₹"
+              placeholder="Min"
               value={minPrice}
               onChange={(e) => setMinPrice(e.target.value)}
               style={{
-                width: "75px",
-                padding: "6px 8px",
+                width: "65px",
+                padding: "4px 6px",
                 border: "1px solid var(--color-border)",
                 borderRadius: "var(--radius-sm)",
-                fontSize: "0.82rem",
+                fontSize: "0.8rem",
                 color: "var(--color-navy)",
                 outline: "none",
               }}
             />
-            <span style={{ color: "var(--color-text-muted)" }}>-</span>
+            <span style={{ color: "var(--color-text-muted)" }}>–</span>
             <input
               type="number"
-              placeholder="Max ₹"
+              placeholder="Max"
               value={maxPrice}
               onChange={(e) => setMaxPrice(e.target.value)}
               style={{
-                width: "80px",
-                padding: "6px 8px",
+                width: "70px",
+                padding: "4px 6px",
                 border: "1px solid var(--color-border)",
                 borderRadius: "var(--radius-sm)",
-                fontSize: "0.82rem",
+                fontSize: "0.8rem",
                 color: "var(--color-navy)",
                 outline: "none",
               }}
@@ -894,12 +905,12 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
             value={minRating}
             onChange={(e) => setMinRating(parseFloat(e.target.value))}
             style={{
-              padding: "6px 12px",
+              padding: "5px 10px",
               border: "1px solid var(--color-border)",
               borderRadius: "var(--radius-sm)",
-              backgroundColor: "#FFFFFF",
+              backgroundColor: "var(--color-white)",
               color: "var(--color-navy)",
-              fontSize: "0.82rem",
+              fontSize: "0.8rem",
               fontWeight: "500",
               cursor: "pointer",
               outline: "none",
@@ -911,41 +922,41 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
             <option value="4.5">4.5★ and above</option>
           </select>
 
-          {/* Sorting Dropdown */}
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <ArrowUpDown size={15} color="var(--color-text-secondary)" />
+          {/* Sort Dropdown */}
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <ArrowUpDown size={13} color="var(--color-text-muted)" />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortPreference)}
               style={{
-                padding: "6px 12px",
+                padding: "5px 10px",
                 border: "1px solid var(--color-border)",
                 borderRadius: "var(--radius-sm)",
-                backgroundColor: "#FFFFFF",
+                backgroundColor: "var(--color-white)",
                 color: "var(--color-navy)",
-                fontSize: "0.84rem",
+                fontSize: "0.8rem",
                 fontWeight: "600",
                 cursor: "pointer",
                 outline: "none",
               }}
             >
-              <option value="relevance">ShopSmart Match — Highest</option>
-              <option value="price_asc">Price — Low to High</option>
-              <option value="price_desc">Price — High to Low</option>
-              <option value="rating_desc">Customer Rating</option>
+              <option value="relevance">Match Score</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="rating_desc">Highest Rated</option>
               <option value="review_count_desc">Most Reviewed</option>
             </select>
           </div>
         </div>
       </section>
 
-      {/* 6. Products Grid or Loading / Honest Outcome State */}
+      {/* 5. Products Grid / Skeletons / Empty States */}
       {loading ? (
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: "24px",
+            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+            gap: "20px",
           }}
         >
           {Array.from({ length: 8 }).map((_, i) => (
@@ -953,25 +964,23 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
               key={i}
               className="card-clean"
               style={{
-                height: "440px",
-                padding: "16px",
+                height: "380px",
+                padding: "14px",
                 display: "flex",
                 flexDirection: "column",
-                gap: "14px",
+                gap: "10px",
               }}
             >
-              <div
-                style={{
-                  height: "200px",
-                  backgroundColor: "#F1F5F9",
-                  borderRadius: "var(--radius-md)",
-                  animation: "pulse 1.5s infinite ease-in-out",
-                }}
-              />
-              <div style={{ height: "18px", width: "40%", backgroundColor: "#F1F5F9", borderRadius: "4px" }} />
-              <div style={{ height: "24px", width: "90%", backgroundColor: "#F1F5F9", borderRadius: "4px" }} />
-              <div style={{ height: "22px", width: "50%", backgroundColor: "#F1F5F9", borderRadius: "4px" }} />
-              <div style={{ height: "36px", marginTop: "auto", backgroundColor: "#F1F5F9", borderRadius: "8px" }} />
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div className="skeleton-shimmer" style={{ height: "16px", width: "70px", borderRadius: "var(--radius-xs)" }} />
+                <div className="skeleton-shimmer" style={{ height: "16px", width: "40px", borderRadius: "var(--radius-xs)" }} />
+              </div>
+              <div className="skeleton-shimmer" style={{ height: "170px", borderRadius: "var(--radius-sm)" }} />
+              <div className="skeleton-shimmer" style={{ height: "12px", width: "40%", borderRadius: "var(--radius-xs)" }} />
+              <div className="skeleton-shimmer" style={{ height: "16px", width: "90%", borderRadius: "var(--radius-xs)" }} />
+              <div className="skeleton-shimmer" style={{ height: "14px", width: "60%", borderRadius: "var(--radius-xs)" }} />
+              <div className="skeleton-shimmer" style={{ height: "20px", width: "45%", borderRadius: "var(--radius-xs)" }} />
+              <div className="skeleton-shimmer" style={{ height: "30px", marginTop: "auto", borderRadius: "var(--radius-sm)" }} />
             </div>
           ))}
         </div>
@@ -979,8 +988,8 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: "24px",
+            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+            gap: "20px",
           }}
         >
           {filteredProducts.map((p) => (

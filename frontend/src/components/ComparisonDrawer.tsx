@@ -34,7 +34,7 @@ export const ComparisonDrawer: React.FC<ComparisonDrawerProps> = ({
         transform: "translateX(-50%)",
         backgroundColor: "var(--color-white)",
         border: "1px solid var(--color-border)",
-        borderRadius: "var(--radius-xl)",
+        borderRadius: "var(--radius-lg)",
         boxShadow: "var(--shadow-xl)",
         zIndex: 950,
         width: "auto",
@@ -50,7 +50,7 @@ export const ComparisonDrawer: React.FC<ComparisonDrawerProps> = ({
           alignItems: "center",
           justifyContent: "space-between",
           gap: "18px",
-          padding: "10px 18px",
+          padding: "10px 16px",
           backgroundColor: isMinimized ? "var(--color-white)" : "#F8FAFC",
           borderBottom: isMinimized ? "none" : "1px solid var(--color-border)",
         }}
@@ -60,7 +60,7 @@ export const ComparisonDrawer: React.FC<ComparisonDrawerProps> = ({
             style={{
               width: "28px",
               height: "28px",
-              borderRadius: "8px",
+              borderRadius: "var(--radius-sm)",
               backgroundColor: "var(--color-royal-blue)",
               display: "flex",
               alignItems: "center",
@@ -72,13 +72,14 @@ export const ComparisonDrawer: React.FC<ComparisonDrawerProps> = ({
           </div>
           <div>
             <span style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--color-navy)" }}>
-              Comparison Queue ({count}/{maxSlots})
+              Compare Queue ({count}/{maxSlots})
             </span>
             <span
               style={{
                 fontSize: "0.75rem",
                 color: canCompare ? "var(--color-green)" : "var(--color-text-muted)",
                 marginLeft: "8px",
+                fontWeight: canCompare ? "600" : "normal",
               }}
             >
               {canCompare ? "Ready to compare" : "Select 1 more item"}
@@ -95,7 +96,9 @@ export const ComparisonDrawer: React.FC<ComparisonDrawerProps> = ({
                 fontSize: "0.76rem",
                 color: "var(--color-text-secondary)",
                 padding: "3px 8px",
+                borderRadius: "var(--radius-xs)",
                 cursor: "pointer",
+                transition: "color var(--transition-fast)",
               }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-rose)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
@@ -111,17 +114,18 @@ export const ComparisonDrawer: React.FC<ComparisonDrawerProps> = ({
             style={{
               width: "26px",
               height: "26px",
-              borderRadius: "6px",
+              borderRadius: "var(--radius-sm)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "var(--color-text-secondary)",
               backgroundColor: "var(--color-bg-muted)",
               cursor: "pointer",
+              transition: "background-color var(--transition-fast)",
             }}
             title={isMinimized ? "Expand Queue" : "Minimize Queue"}
           >
-            {isMinimized ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            {isMinimized ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
           </button>
         </div>
       </div>
@@ -130,21 +134,21 @@ export const ComparisonDrawer: React.FC<ComparisonDrawerProps> = ({
       {!isMinimized && (
         <div
           style={{
-            padding: "12px 18px",
+            padding: "12px 16px",
             display: "flex",
             alignItems: "center",
-            gap: "14px",
+            gap: "12px",
             flexWrap: "wrap",
           }}
         >
           {/* Selected Product Slots */}
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", overflowX: "auto" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", overflowX: "auto" }}>
             {selectedProducts.map((product) => (
               <div
                 key={product.id}
                 style={{
                   position: "relative",
-                  width: "160px",
+                  width: "164px",
                   display: "flex",
                   alignItems: "center",
                   gap: "8px",
@@ -160,7 +164,8 @@ export const ComparisonDrawer: React.FC<ComparisonDrawerProps> = ({
                     width: "36px",
                     height: "36px",
                     backgroundColor: "#FFFFFF",
-                    borderRadius: "var(--radius-sm)",
+                    borderRadius: "var(--radius-xs)",
+                    border: "1px solid var(--color-border)",
                     padding: "2px",
                     display: "flex",
                     alignItems: "center",
@@ -182,7 +187,7 @@ export const ComparisonDrawer: React.FC<ComparisonDrawerProps> = ({
                 <div style={{ overflow: "hidden", flex: 1, minWidth: 0 }}>
                   <div
                     style={{
-                      fontSize: "0.75rem",
+                      fontSize: "0.74rem",
                       fontWeight: "600",
                       color: "var(--color-navy)",
                       whiteSpace: "nowrap",
@@ -193,7 +198,7 @@ export const ComparisonDrawer: React.FC<ComparisonDrawerProps> = ({
                   >
                     {product.title}
                   </div>
-                  <div style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--color-royal-blue)" }}>
+                  <div style={{ fontSize: "0.74rem", fontWeight: "700", color: "var(--color-royal-blue)" }}>
                     {product.price !== null ? `₹${product.price.toLocaleString("en-IN")}` : "₹--"}
                   </div>
                 </div>
@@ -206,7 +211,7 @@ export const ComparisonDrawer: React.FC<ComparisonDrawerProps> = ({
                   style={{
                     width: "18px",
                     height: "18px",
-                    borderRadius: "50%",
+                    borderRadius: "var(--radius-xs)",
                     backgroundColor: "#FFFFFF",
                     border: "1px solid var(--color-border)",
                     display: "flex",
@@ -215,14 +220,17 @@ export const ComparisonDrawer: React.FC<ComparisonDrawerProps> = ({
                     color: "var(--color-text-secondary)",
                     cursor: "pointer",
                     flexShrink: 0,
+                    transition: "all var(--transition-fast)",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "var(--color-rose)";
-                    e.currentTarget.style.color = "#FFFFFF";
+                    e.currentTarget.style.backgroundColor = "var(--color-rose-light)";
+                    e.currentTarget.style.color = "var(--color-rose)";
+                    e.currentTarget.style.borderColor = "var(--color-rose-border)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = "#FFFFFF";
                     e.currentTarget.style.color = "var(--color-text-secondary)";
+                    e.currentTarget.style.borderColor = "var(--color-border)";
                   }}
                 >
                   <X size={10} />
@@ -235,7 +243,7 @@ export const ComparisonDrawer: React.FC<ComparisonDrawerProps> = ({
               <div
                 key={i}
                 style={{
-                  width: "110px",
+                  width: "104px",
                   height: "48px",
                   borderRadius: "var(--radius-md)",
                   border: "1px dashed var(--color-border)",
@@ -245,11 +253,11 @@ export const ComparisonDrawer: React.FC<ComparisonDrawerProps> = ({
                   justifyContent: "center",
                   gap: "4px",
                   color: "var(--color-text-muted)",
-                  fontSize: "0.75rem",
+                  fontSize: "0.74rem",
                   flexShrink: 0,
                 }}
               >
-                <Plus size={13} />
+                <Plus size={12} />
                 <span>Add item</span>
               </div>
             ))}
@@ -262,14 +270,14 @@ export const ComparisonDrawer: React.FC<ComparisonDrawerProps> = ({
             disabled={!canCompare}
             className="btn-primary"
             style={{
-              padding: "9px 18px",
-              fontSize: "0.85rem",
-              borderRadius: "var(--radius-full)",
+              padding: "8px 16px",
+              fontSize: "0.84rem",
+              borderRadius: "var(--radius-md)",
               flexShrink: 0,
             }}
           >
             <span>Compare {count} items</span>
-            <ArrowRight size={15} />
+            <ArrowRight size={14} />
           </button>
         </div>
       )}

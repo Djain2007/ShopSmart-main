@@ -27,14 +27,16 @@ class SearchCache:
         max_results: int = 10,
         budget_max: Optional[float] = None,
         sort_by: Optional[str] = None,
+        enable_ai_ranking: bool = True,
     ) -> str:
         """Create a deterministic, canonical cache key."""
         clean_q = " ".join(query.strip().lower().split())
         clean_sources = sorted([s.strip().lower() for s in (sources or ["amazon.in", "flipkart.com"])])
         b_max = f"{round(budget_max, 2)}" if budget_max else "none"
         s_by = (sort_by or "relevance").lower()
+        ai_flag = "1" if enable_ai_ranking else "0"
 
-        raw_str = f"q:{clean_q}|s:{','.join(clean_sources)}|mr:{max_results}|b:{b_max}|sort:{s_by}"
+        raw_str = f"q:{clean_q}|s:{','.join(clean_sources)}|mr:{max_results}|b:{b_max}|sort:{s_by}|ai:{ai_flag}"
         return hashlib.sha256(raw_str.encode("utf-8")).hexdigest()
 
     def get(self, key: str) -> Optional[Dict[str, Any]]:

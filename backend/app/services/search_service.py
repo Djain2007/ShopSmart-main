@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import re
 import time
@@ -337,9 +338,9 @@ class SearchService:
             "amazon.in": AmazonScraper(),
             "flipkart.com": FlipkartScraper(),
         }
-        self.retailer_deadline_seconds = getattr(settings, "retailer_timeout", 5.0)
-        self.ai_ranking_deadline_seconds = getattr(settings, "scalemax_ranking_timeout", 8.0)
-        self.search_total_deadline_seconds = getattr(settings, "search_total_deadline", 15.0)
+        self.retailer_deadline_seconds = getattr(settings, "retailer_timeout", 7.5)
+        self.ai_ranking_deadline_seconds = getattr(settings, "scalemax_ranking_timeout", 10.0)
+        self.search_total_deadline_seconds = getattr(settings, "search_total_deadline", 18.0)
         self._in_flight_searches: Dict[str, asyncio.Task] = {}
 
     async def execute_search(
@@ -350,6 +351,7 @@ class SearchService:
         budget_max: Optional[float] = None,
         sort_by: Optional[str] = None,
         use_cache: bool = True,
+        enable_ai_ranking: bool = True,
     ) -> AppSearchResponse:
         """
         Optimized shopping search pipeline with Monotonic Timing, Request Coalescing and Cache Acceleration.
@@ -358,7 +360,9 @@ class SearchService:
         requested_sources = sources or ["amazon.in", "flipkart.com"]
 
         # Check Cache First
-        cache_key = search_cache.normalize_key(query, requested_sources, max_results_per_source, budget_max, sort_by)
+        cache_key = search_cache.normalize_key(
+            query, requested_sources, max_results_per_source, budget_max, sort_by, enable_ai_ranking=enable_ai_ranking
+        )
         if use_cache:
             cached_entry = search_cache.get(cache_key)
             if cached_entry:
@@ -394,6 +398,7 @@ class SearchService:
                 sort_by=sort_by,
                 cache_key=cache_key,
                 t_start=t_start,
+                enable_ai_ranking=enable_ai_ranking,
             )
         )
         self._in_flight_searches[cache_key] = worker_task
@@ -417,6 +422,7 @@ class SearchService:
         sort_by: Optional[str],
         cache_key: str,
         t_start: float,
+        enable_ai_ranking: bool = True,
     ) -> AppSearchResponse:
         search_id = f"srch-{uuid.uuid4().hex[:12]}"
         timings: Dict[str, Any] = {"search_id": search_id, "cache_hit": False}
@@ -526,22 +532,33 @@ class SearchService:
         min_p = min(prices) if prices else None
         max_p = max(prices) if prices else None
 
+        # Pre-score all valid products deterministically so top candidates sent to ScaleMax are highest quality
+        scored_candidates = []
+        for p in valid_products:
+            sc, _, _, _, _, _ = deterministic_score_product(p, search_plan, min_p, max_p)
+            scored_candidates.append((sc, p))
+        scored_candidates.sort(key=lambda x: -x[0])
+        sorted_valid_products = [p for _, p in scored_candidates]
+
         # 5. AI Ranking via ScaleMax (with bounded timeout and fallback)
         t_rank_start = time.perf_counter()
         ranked_products_map: Dict[str, RankedProduct] = {}
         ai_summary = None
         ai_meta = None
         ai_status: str = "unavailable"
+        submitted_count = 0
 
-        if ai_service.client.is_configured and valid_products:
+        if enable_ai_ranking and ai_service.client.is_configured and valid_products:
             ai_status = "connected"
             try:
-                # Bounded wait on AI ranking so it never delays search beyond deadline
+                # Top 3 highest scored candidates sent to ScaleMax (guarantees fast ~5-7s response within 10s budget)
+                candidates_for_llm = sorted_valid_products[:3]
+                submitted_count = len(candidates_for_llm)
                 rank_resp = await asyncio.wait_for(
                     ai_service.rank_products(
                         plan=search_plan,
-                        products=valid_products,
-                        top_k=min(5, len(valid_products)),
+                        products=candidates_for_llm,
+                        top_k=min(3, len(candidates_for_llm)),
                         include_explanations=True,
                     ),
                     timeout=self.ai_ranking_deadline_seconds + 0.5,
@@ -553,6 +570,14 @@ class SearchService:
                     ai_meta = rank_resp.meta
                     ai_status = "ready"
                     timings["ai_ranking_status"] = "successful"
+                    if rank_resp.notes:
+                        for note_str in rank_resp.notes:
+                            try:
+                                note_dict = json.loads(note_str)
+                                if "scalemax_detailed_timings" in note_dict:
+                                    timings["scalemax_detailed_timings"] = note_dict["scalemax_detailed_timings"]
+                            except Exception:
+                                pass
                 else:
                     ai_status = "degraded"
                     timings["ai_ranking_status"] = "empty_result"
@@ -707,6 +732,7 @@ class SearchService:
             "deduplicated_count": len(canonical_products),
             "valid_filtered_count": len(valid_products),
             "excluded_count": len(excluded_list),
+            "submitted_for_ranking_count": submitted_count,
             "ranked_count": len(ranked_products_map),
             "returned_count": len(unified_products),
             "ai_status": ai_status,

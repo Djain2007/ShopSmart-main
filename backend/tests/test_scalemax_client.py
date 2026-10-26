@@ -267,8 +267,8 @@ def test_scalemax_client_zero_automatic_retries():
 @pytest.mark.asyncio
 async def test_diagnostic_fails_gracefully_on_unconfigured():
     """Verify that the diagnostic script exits with code 1 if credentials are missing."""
-    from backend.scripts.test_scalemax import run_diagnostic
-    with patch("backend.scripts.test_scalemax.settings.scalemax_api_key", ""):
+    from scripts.test_scalemax import run_diagnostic
+    with patch("scripts.test_scalemax.settings.scalemax_api_key", ""):
         exit_code = await run_diagnostic(timeout=2.0)
         assert exit_code == 1
 

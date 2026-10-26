@@ -4,6 +4,7 @@ import logging
 from typing import Any, Dict, List, Optional
 import httpx
 
+from backend.app.config import settings
 from backend.app.models.schemas import SourceName
 
 logger = logging.getLogger("shopsmart.scrapers")
@@ -17,9 +18,9 @@ class BotChallengeError(Exception):
 class BaseScraper(ABC):
     """Abstract base scraper for Indian e-commerce discovery with bounded timeouts and connection pooling."""
 
-    def __init__(self, source_name: SourceName, timeout_seconds: float = 4.5):
+    def __init__(self, source_name: SourceName, timeout_seconds: Optional[float] = None):
         self.source_name: SourceName = source_name
-        self.timeout_seconds: float = timeout_seconds
+        self.timeout_seconds: float = timeout_seconds if timeout_seconds is not None else getattr(settings, "retailer_timeout", 7.5)
         self._shared_client: Optional[httpx.AsyncClient] = None
 
     @abstractmethod
@@ -54,7 +55,7 @@ class BaseScraper(ABC):
             limits = httpx.Limits(max_keepalive_connections=10, max_connections=20)
             self._shared_client = httpx.AsyncClient(
                 headers=self.get_default_headers(),
-                timeout=httpx.Timeout(self.timeout_seconds, connect=3.0),
+                timeout=httpx.Timeout(self.timeout_seconds, connect=3.5, read=self.timeout_seconds),
                 follow_redirects=True,
                 limits=limits,
             )
@@ -89,6 +90,7 @@ class BaseScraper(ABC):
                 resp.status_code in (403, 503)
                 or "robot check" in lowered_text
                 or "automated access" in lowered_text
+                or "api-services-support@amazon.com" in lowered_text
                 or "verify you are human" in lowered_text
                 or "enter the characters you see below" in lowered_text
                 or "security challenge" in lowered_text
@@ -155,7 +157,7 @@ class BaseScraper(ABC):
             logger.warning(f"Timeout while reaching {self.source_name} after {self.timeout_seconds}s")
             return {
                 "source": self.source_name,
-                "status": "unavailable",
+                "status": "timeout",
                 "message": f"Connection to {self.source_name} timed out after {self.timeout_seconds}s.",
                 "products": [],
             }

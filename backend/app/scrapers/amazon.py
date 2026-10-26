@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from urllib.parse import quote_plus, urljoin
 
 from bs4 import BeautifulSoup
@@ -11,8 +11,8 @@ from backend.app.scrapers.base import BaseScraper, BotChallengeError
 class AmazonScraper(BaseScraper):
     """Adapter for discovering products from Amazon.in public search."""
 
-    def __init__(self):
-        super().__init__(source_name="amazon.in", timeout_seconds=10.0)
+    def __init__(self, timeout_seconds: Optional[float] = None):
+        super().__init__(source_name="amazon.in", timeout_seconds=timeout_seconds)
 
     def build_search_url(self, query: str) -> str:
         return f"https://www.amazon.in/s?k={quote_plus(query)}"
@@ -24,9 +24,13 @@ class AmazonScraper(BaseScraper):
         # Bot challenge check
         title_tag = soup.find("title")
         title_text = title_tag.get_text(strip=True).lower() if title_tag else ""
-        if "robot check" in title_text or "access denied" in title_text:
+        if "robot check" in title_text or "access denied" in title_text or "service unavailable" in title_text:
             raise BotChallengeError("Amazon Robot Check challenge detected")
-        if "type the characters you see in this image" in html.lower():
+        if (
+            "type the characters you see in this image" in html.lower()
+            or "api-services-support@amazon.com" in html.lower()
+            or "automated access to amazon data" in html.lower()
+        ):
             raise BotChallengeError("Amazon CAPTCHA challenge detected")
 
         # Find search result items with an ASIN

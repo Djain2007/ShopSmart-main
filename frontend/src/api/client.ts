@@ -28,6 +28,7 @@ export const apiClient = {
     maxResults?: number;
     budgetMax?: number | null;
     sortBy?: SortPreference | null;
+    enableAiRanking?: boolean;
     signal?: AbortSignal;
   }): Promise<AppSearchResponse> {
     // Abort previous in-flight search request to prevent stale results from overwriting newer ones
@@ -48,6 +49,7 @@ export const apiClient = {
           max_results_per_source: params.maxResults || 10,
           budget_max: params.budgetMax || null,
           sort_by: params.sortBy || null,
+          enable_ai_ranking: params.enableAiRanking !== undefined ? params.enableAiRanking : true,
         }),
       });
       if (!res.ok) {

@@ -3,7 +3,8 @@ import json
 import logging
 import re
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+import uuid
 
 import openai
 from openai import AsyncOpenAI
@@ -237,20 +238,26 @@ class ScaleMaxClient:
             device_type="cloud-api",
         )
 
-    async def complete_chat(
+    async def complete_chat_with_timings(
         self,
         messages: List[Dict[str, str]],
         max_tokens: int = 1000,
         temperature: float = 0.2,
         timeout: Optional[float] = None,
-    ) -> str:
-        """Execute a text chat completion against ScaleMax."""
+        correlation_id: Optional[str] = None,
+    ) -> Tuple[str, Dict[str, Any]]:
+        """
+        Execute a text chat completion against ScaleMax with monotonic latency instrumentation.
+        Returns (content, timings_dict).
+        """
         if not self.is_configured:
             raise ScaleMaxError("ScaleMax AI client is not configured.", code="not_configured")
 
+        req_id = correlation_id or f"sm-{uuid.uuid4().hex[:8]}"
         client = self._get_client()
         call_timeout = timeout or self.default_timeout
 
+        t_start = time.perf_counter()
         try:
             response = await asyncio.wait_for(
                 client.chat.completions.create(
@@ -262,6 +269,9 @@ class ScaleMaxClient:
                 ),
                 timeout=call_timeout + 1.0,
             )
+            t_completion = time.perf_counter()
+            completion_ms = int((t_completion - t_start) * 1000)
+
             choice = response.choices[0]
             content = (choice.message.content or "").strip()
             if not content:
@@ -271,11 +281,61 @@ class ScaleMaxClient:
                     content = reasoning.strip()
                 else:
                     raise ValueError(f"ScaleMax model returned empty output (finish_reason: {choice.finish_reason})")
-            return content
+
+            timings = {
+                "correlation_id": req_id,
+                "model_completion_ms": completion_ms,
+                "total_ai_latency_ms": completion_ms,
+            }
+            return content, timings
         except Exception as e:
             classified = self._classify_error(e)
-            logger.warning(f"ScaleMax completion failed: {classified.code}: {classified.message}")
+            logger.warning(f"ScaleMax completion failed [{req_id}]: {classified.code}: {classified.message}")
             raise classified
+
+    async def complete_chat(
+        self,
+        messages: List[Dict[str, str]],
+        max_tokens: int = 1000,
+        temperature: float = 0.2,
+        timeout: Optional[float] = None,
+    ) -> str:
+        """Execute a text chat completion against ScaleMax."""
+        content, _ = await self.complete_chat_with_timings(
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            timeout=timeout,
+        )
+        return content
+
+    async def complete_json_with_timings(
+        self,
+        messages: List[Dict[str, str]],
+        max_tokens: int = 1200,
+        temperature: float = 0.1,
+        timeout: Optional[float] = None,
+        correlation_id: Optional[str] = None,
+    ) -> Tuple[Any, Dict[str, Any]]:
+        """
+        Execute completion against ScaleMax and parse response as JSON with latency breakdown.
+        Returns (parsed_json, timings_dict).
+        """
+        content, timings = await self.complete_chat_with_timings(
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            timeout=timeout,
+            correlation_id=correlation_id,
+        )
+        t_parse_start = time.perf_counter()
+        parsed = extract_json_safely(content)
+        t_parse_end = time.perf_counter()
+        parse_ms = int((t_parse_end - t_parse_start) * 1000)
+
+        timings["response_parsing_ms"] = parse_ms
+        timings["total_ai_latency_ms"] = timings["model_completion_ms"] + parse_ms
+        return parsed, timings
 
     async def complete_json(
         self,
@@ -288,13 +348,14 @@ class ScaleMaxClient:
         Execute a completion against ScaleMax and parse the response as JSON.
         Uses a robust bounded parser that handles code fences or surrounding text safely.
         """
-        content = await self.complete_chat(
+        parsed, _ = await self.complete_json_with_timings(
             messages=messages,
             max_tokens=max_tokens,
             temperature=temperature,
             timeout=timeout,
         )
-        return extract_json_safely(content)
+        return parsed
 
 
 scalemax_client = ScaleMaxClient()
+

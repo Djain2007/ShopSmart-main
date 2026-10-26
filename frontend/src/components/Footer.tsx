@@ -1,40 +1,40 @@
 import React from "react";
-import { Sparkles, ShieldCheck, Zap, Bot, ArrowUpRight } from "lucide-react";
+import { ShoppingBag, ShieldCheck, Zap, SlidersHorizontal } from "lucide-react";
 import type { NavTab } from "./Header";
 
 interface FooterProps {
   onTabChange: (tab: NavTab) => void;
-  onOpenAIConfig: () => void;
+  onOpenPreferences: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onTabChange, onOpenAIConfig }) => {
+export const Footer: React.FC<FooterProps> = ({ onTabChange, onOpenPreferences }) => {
   return (
     <footer
       style={{
         backgroundColor: "var(--color-white)",
         borderTop: "1px solid var(--color-border)",
-        marginTop: "80px",
-        padding: "60px 24px 36px 24px",
+        marginTop: "64px",
+        padding: "48px 24px 28px 24px",
       }}
     >
       <div
         style={{
-          maxWidth: "1320px",
+          maxWidth: "1280px",
           margin: "0 auto",
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-          gap: "40px",
-          marginBottom: "48px",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: "36px",
+          marginBottom: "36px",
         }}
       >
         {/* Brand Column */}
         <div style={{ maxWidth: "340px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "12px" }}>
             <div
               style={{
-                width: "34px",
-                height: "34px",
-                borderRadius: "10px",
+                width: "30px",
+                height: "30px",
+                borderRadius: "var(--radius-sm)",
                 backgroundColor: "var(--color-royal-blue)",
                 display: "flex",
                 alignItems: "center",
@@ -42,14 +42,15 @@ export const Footer: React.FC<FooterProps> = ({ onTabChange, onOpenAIConfig }) =
                 color: "#FFFFFF",
               }}
             >
-              <Sparkles size={18} fill="#FFFFFF" />
+              <ShoppingBag size={16} />
             </div>
             <span
               style={{
                 fontFamily: "var(--font-heading)",
-                fontSize: "1.25rem",
-                fontWeight: "800",
+                fontSize: "1.15rem",
+                fontWeight: "700",
                 color: "var(--color-navy)",
+                letterSpacing: "-0.02em",
               }}
             >
               Shop<span style={{ color: "var(--color-royal-blue)" }}>Smart</span>
@@ -57,22 +58,22 @@ export const Footer: React.FC<FooterProps> = ({ onTabChange, onOpenAIConfig }) =
           </div>
           <p
             style={{
-              fontSize: "0.88rem",
+              fontSize: "0.82rem",
               color: "var(--color-text-secondary)",
-              lineHeight: "1.6",
-              marginBottom: "18px",
+              lineHeight: "1.55",
+              marginBottom: "14px",
             }}
           >
-            Shopping made smarter. An AI-powered natural language shopping assistant that crawls live listings on Amazon India & Flipkart and explains rankings with factual evidence.
+            Factual shopping intelligence. Discovers live product listings across Amazon India and Flipkart, extracting real specifications and verifying prices.
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span className="badge-clean badge-blue">
-              <Zap size={12} />
-              ScaleMax AI Provider
+            <span className="badge-clean badge-blue" style={{ fontSize: "0.72rem" }}>
+              <Zap size={11} />
+              Dual-Retailer Discovery
             </span>
-            <span className="badge-clean badge-green">
-              <ShieldCheck size={12} />
-              Verified Factual
+            <span className="badge-clean badge-green" style={{ fontSize: "0.72rem" }}>
+              <ShieldCheck size={11} />
+              Factual Grounding
             </span>
           </div>
         </div>
@@ -81,17 +82,17 @@ export const Footer: React.FC<FooterProps> = ({ onTabChange, onOpenAIConfig }) =
         <div>
           <h4
             style={{
-              fontSize: "0.92rem",
+              fontSize: "0.8rem",
               fontWeight: "700",
               color: "var(--color-navy)",
               textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              marginBottom: "18px",
+              letterSpacing: "0.06em",
+              marginBottom: "14px",
             }}
           >
             Navigation
           </h4>
-          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "12px" }}>
+          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
             <li>
               <button
                 type="button"
@@ -100,7 +101,7 @@ export const Footer: React.FC<FooterProps> = ({ onTabChange, onOpenAIConfig }) =
                   onTabChange("home");
                 }}
                 style={{
-                  fontSize: "0.9rem",
+                  fontSize: "0.84rem",
                   color: "var(--color-text-secondary)",
                   cursor: "pointer",
                   transition: "color var(--transition-fast)",
@@ -119,7 +120,7 @@ export const Footer: React.FC<FooterProps> = ({ onTabChange, onOpenAIConfig }) =
                   onTabChange("explore");
                 }}
                 style={{
-                  fontSize: "0.9rem",
+                  fontSize: "0.84rem",
                   color: "var(--color-text-secondary)",
                   cursor: "pointer",
                   transition: "color var(--transition-fast)",
@@ -138,7 +139,7 @@ export const Footer: React.FC<FooterProps> = ({ onTabChange, onOpenAIConfig }) =
                   onTabChange("assistant");
                 }}
                 style={{
-                  fontSize: "0.9rem",
+                  fontSize: "0.84rem",
                   color: "var(--color-text-secondary)",
                   cursor: "pointer",
                   transition: "color var(--transition-fast)",
@@ -146,7 +147,7 @@ export const Footer: React.FC<FooterProps> = ({ onTabChange, onOpenAIConfig }) =
                 onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-royal-blue)")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
               >
-                AI Shopping Assistant
+                Shopping Assistant
               </button>
             </li>
             <li>
@@ -157,7 +158,7 @@ export const Footer: React.FC<FooterProps> = ({ onTabChange, onOpenAIConfig }) =
                   onTabChange("compare");
                 }}
                 style={{
-                  fontSize: "0.9rem",
+                  fontSize: "0.84rem",
                   color: "var(--color-text-secondary)",
                   cursor: "pointer",
                   transition: "color var(--transition-fast)",
@@ -165,84 +166,54 @@ export const Footer: React.FC<FooterProps> = ({ onTabChange, onOpenAIConfig }) =
                 onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-royal-blue)")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
               >
-                Side-by-Side Comparison
+                Product Comparison
               </button>
             </li>
           </ul>
         </div>
 
-        {/* Supported Retailers */}
+        {/* Customer Controls */}
         <div>
           <h4
             style={{
-              fontSize: "0.92rem",
+              fontSize: "0.8rem",
               fontWeight: "700",
               color: "var(--color-navy)",
               textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              marginBottom: "18px",
+              letterSpacing: "0.06em",
+              marginBottom: "14px",
             }}
           >
-            Live Retailers
+            Preferences
           </h4>
-          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "12px" }}>
-            <li>
-              <a
-                href="https://www.amazon.in"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  fontSize: "0.9rem",
-                  color: "var(--color-text-secondary)",
-                  transition: "color var(--transition-fast)",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#FF9900")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
-              >
-                <span>Amazon India (amazon.in)</span>
-                <ArrowUpRight size={14} />
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://www.flipkart.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  fontSize: "0.9rem",
-                  color: "var(--color-text-secondary)",
-                  transition: "color var(--transition-fast)",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#2874F0")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
-              >
-                <span>Flipkart (flipkart.com)</span>
-                <ArrowUpRight size={14} />
-              </a>
-            </li>
+          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
             <li>
               <button
                 type="button"
-                onClick={onOpenAIConfig}
+                onClick={onOpenPreferences}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "6px",
-                  fontSize: "0.9rem",
-                  color: "var(--color-purple)",
+                  fontSize: "0.84rem",
+                  color: "var(--color-royal-blue)",
                   fontWeight: "600",
                   cursor: "pointer",
                 }}
               >
-                <Bot size={15} />
-                <span>ScaleMax AI Settings</span>
+                <SlidersHorizontal size={14} />
+                <span>Search Preferences</span>
               </button>
+            </li>
+            <li>
+              <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+                Currency: Indian Rupee (INR ₹)
+              </span>
+            </li>
+            <li>
+              <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+                Sources: Amazon India · Flipkart
+              </span>
             </li>
           </ul>
         </div>
@@ -251,28 +222,28 @@ export const Footer: React.FC<FooterProps> = ({ onTabChange, onOpenAIConfig }) =
         <div>
           <h4
             style={{
-              fontSize: "0.92rem",
+              fontSize: "0.8rem",
               fontWeight: "700",
               color: "var(--color-navy)",
               textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              marginBottom: "18px",
+              letterSpacing: "0.06em",
+              marginBottom: "14px",
             }}
           >
             Principles
           </h4>
           <p
             style={{
-              fontSize: "0.85rem",
+              fontSize: "0.82rem",
               color: "var(--color-text-secondary)",
-              lineHeight: "1.6",
-              marginBottom: "12px",
+              lineHeight: "1.55",
+              marginBottom: "10px",
             }}
           >
-            Zero hallucinations. Every recommendation, spec, and score is strictly grounded in real retailer listing data and transparent matching criteria.
+            Zero fabricated data. Every recommendation, spec, and score is strictly grounded in real retailer listing data and transparent matching criteria.
           </p>
-          <span style={{ fontSize: "0.78rem", color: "var(--color-text-muted)" }}>
-            ShopSmart 2.0 · Natural Language Shopping Assistant
+          <span style={{ fontSize: "0.74rem", color: "var(--color-text-muted)" }}>
+            ShopSmart · Production E-Commerce Intelligence
           </span>
         </div>
       </div>
@@ -280,21 +251,21 @@ export const Footer: React.FC<FooterProps> = ({ onTabChange, onOpenAIConfig }) =
       {/* Copyright Bar */}
       <div
         style={{
-          maxWidth: "1320px",
+          maxWidth: "1280px",
           margin: "0 auto",
-          paddingTop: "24px",
+          paddingTop: "20px",
           borderTop: "1px solid var(--color-border)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           flexWrap: "wrap",
-          gap: "12px",
-          fontSize: "0.82rem",
+          gap: "10px",
+          fontSize: "0.78rem",
           color: "var(--color-text-muted)",
         }}
       >
-        <span>© 2026 ShopSmart — AI Shopping Assistant. All rights reserved.</span>
-        <span>Built with React, TypeScript & FastAPI</span>
+        <span>© 2026 ShopSmart. Factual Shopping Intelligence.</span>
+        <span>React 18 · TypeScript · FastAPI</span>
       </div>
     </footer>
   );

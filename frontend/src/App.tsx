@@ -9,13 +9,11 @@ import { ComparisonDrawer } from "./components/ComparisonDrawer";
 import { ProfileModal } from "./components/ProfileModal";
 import { SavedDrawer } from "./components/SavedDrawer";
 import { HistoryDrawer } from "./components/HistoryDrawer";
-import { AIConfigModal } from "./components/AIConfigModal";
 import { apiClient } from "./api/client";
-import type { AppSearchResponse, SourceName, SystemStatus, UnifiedProduct } from "./types";
+import type { AppSearchResponse, SourceName, UnifiedProduct } from "./types";
 
 export function App() {
   const [activeTab, setActiveTab] = useState<NavTab>("home");
-  const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [searchResponse, setSearchResponse] = useState<AppSearchResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -27,17 +25,7 @@ export function App() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSavedOpen, setIsSavedOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [savedCount, setSavedCount] = useState(0);
-
-  const loadStatus = async () => {
-    try {
-      const res = await apiClient.getStatus();
-      setSystemStatus(res);
-    } catch {
-      // Offline fallback handling
-    }
-  };
 
   const loadSavedCount = async () => {
     try {
@@ -50,11 +38,12 @@ export function App() {
 
   const loadInitialRecommendations = async () => {
     try {
-      // Fetch initial discovery products quietly
+      // Fetch initial discovery products quietly without consuming AI tokens or delaying startup
       const res = await apiClient.search({
         query: "wireless earbuds",
         sources: ["amazon.in", "flipkart.com"],
         maxResults: 8,
+        enableAiRanking: false,
       });
       setSearchResponse(res);
     } catch {
@@ -67,7 +56,6 @@ export function App() {
 
   // Load initial status and saved count on mount (single execution)
   useEffect(() => {
-    loadStatus();
     loadSavedCount();
     if (!hasInitialized.current) {
       hasInitialized.current = true;
@@ -95,7 +83,6 @@ export function App() {
         maxResults: 12,
       });
       setSearchResponse(res);
-      loadStatus();
       loadSavedCount();
     } catch (err: any) {
       if (err.name !== "AbortError") {
@@ -154,11 +141,10 @@ export function App() {
         }}
         compareCount={selectedCompareIds.length}
         savedCount={savedCount}
-        status={systemStatus}
         onSearch={(q) => handleSearch(q)}
         onOpenSaved={() => setIsSavedOpen(true)}
+        onOpenHistory={() => setIsHistoryOpen(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
-        onOpenAIConfig={() => setIsConfigOpen(true)}
         loading={loading}
       />
 
@@ -176,7 +162,6 @@ export function App() {
             onToggleCompare={handleToggleCompare}
             onToggleSave={handleToggleSave}
             onQuickView={() => {
-              // Open explore
               setActiveTab("explore");
             }}
             loading={loading}
@@ -229,7 +214,7 @@ export function App() {
             window.scrollTo({ top: 0, behavior: "smooth" });
             setActiveTab(tab);
           }}
-          onOpenAIConfig={() => setIsConfigOpen(true)}
+          onOpenPreferences={() => setIsProfileOpen(true)}
         />
       )}
 
@@ -245,15 +230,13 @@ export function App() {
         }}
       />
 
-      {/* 5. User Profile & System Modal */}
+      {/* 5. Customer Shopping Preferences Modal */}
       <ProfileModal
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
-        status={systemStatus}
         savedCount={savedCount}
         onOpenSaved={() => setIsSavedOpen(true)}
         onOpenHistory={() => setIsHistoryOpen(true)}
-        onOpenAIConfig={() => setIsConfigOpen(true)}
       />
 
       {/* 6. Wishlist / Saved Products Slide-over Drawer */}
@@ -280,16 +263,6 @@ export function App() {
         onSelectQuery={(q) => {
           handleSearch(q);
           setActiveTab("explore");
-        }}
-      />
-
-      {/* 8. ScaleMax AI Config Modal */}
-      <AIConfigModal
-        isOpen={isConfigOpen}
-        onClose={() => setIsConfigOpen(false)}
-        status={systemStatus}
-        onConfigSaved={() => {
-          loadStatus();
         }}
       />
     </div>

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
-  Sparkles,
   Send,
   Bot,
   User,
@@ -11,6 +10,7 @@ import {
   Eye,
   Scale,
   Check,
+  ShieldCheck,
 } from "lucide-react";
 import type { ChatTurn, UnifiedProduct } from "../types";
 import { apiClient } from "../api/client";
@@ -26,19 +26,19 @@ interface AIAssistantPageProps {
 
 const SCENARIOS = [
   {
-    label: "Travel Headphones",
+    label: "Noise Cancelling Headphones",
     prompt: "I fly frequently on long international flights. What are the best noise-cancelling headphones under ₹30,000 with long battery life and comfortable earcups?",
-    icon: <Headphones size={15} />,
+    icon: <Headphones size={14} />,
   },
   {
-    label: "Coding Laptop",
+    label: "Developer Coding Laptop",
     prompt: "I am a full-stack developer who runs Docker and local LLMs. What laptop has at least 16GB RAM, an ergonomic keyboard, and good thermals under ₹80,000?",
-    icon: <Laptop size={15} />,
+    icon: <Laptop size={14} />,
   },
   {
-    label: "Running Shoes & Fitness",
-    prompt: "I run 5km daily on paved asphalt roads. Recommend durable running gear or smart fitness watches with accurate heart rate tracking.",
-    icon: <Activity size={15} />,
+    label: "Durable Running Shoes",
+    prompt: "I run 5km daily on paved asphalt roads. Recommend durable running gear with cushioned soles under ₹3,000.",
+    icon: <Activity size={14} />,
   },
 ];
 
@@ -53,7 +53,7 @@ export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
     {
       role: "assistant",
       content:
-        "Welcome to the ShopSmart Conversational Shopping Assistant. Describe your lifestyle, work demands, and budget constraints in everyday language. I will analyze real product specifications, compare options across Amazon India & Flipkart, and explain which product offers the greatest value.",
+        "Welcome to the ShopSmart Shopping Assistant. Describe your use case, technical requirements, or budget in plain words. I analyze verified product specifications from Amazon India and Flipkart to help you make confident buying decisions.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -102,8 +102,7 @@ export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
         {
           role: "assistant",
           content:
-            "I encountered an issue connecting to the AI inference service. " +
-            (err.message || "Please verify that the backend and ScaleMax AI are configured."),
+            "AI assistance is temporarily unavailable. Please try again shortly.",
         },
       ]);
     } finally {
@@ -112,65 +111,43 @@ export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "32px", maxWidth: "1080px", margin: "0 auto" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px", maxWidth: "880px", margin: "0 auto" }}>
       {/* 1. Page Header */}
-      <section style={{ textAlign: "center", padding: "12px 0" }}>
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            backgroundColor: "var(--color-lavender)",
-            color: "var(--color-purple)",
-            border: "1px solid var(--color-lavender-border)",
-            padding: "6px 14px",
-            borderRadius: "var(--radius-full)",
-            fontSize: "0.82rem",
-            fontWeight: "700",
-            marginBottom: "16px",
-          }}
-        >
-          <Sparkles size={14} />
-          <span>Conversational Shopping Assistant</span>
+      <section style={{ padding: "8px 0" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+          <span className="badge-clean badge-blue">
+            <ShieldCheck size={12} />
+            Verified Spec Assistant
+          </span>
         </div>
 
         <h1
           style={{
-            fontSize: "2.4rem",
-            fontWeight: "800",
+            fontSize: "1.75rem",
+            fontWeight: "700",
             color: "var(--color-navy)",
-            marginBottom: "12px",
-            letterSpacing: "-0.03em",
+            marginBottom: "6px",
+            letterSpacing: "-0.025em",
           }}
         >
-          Conversational intelligence in action.
+          Conversational Shopping Assistant
         </h1>
 
         <p
           style={{
-            fontSize: "1.05rem",
+            fontSize: "0.92rem",
             color: "var(--color-text-secondary)",
-            maxWidth: "680px",
-            margin: "0 auto",
-            lineHeight: "1.6",
+            lineHeight: "1.5",
           }}
         >
-          Describe your lifestyle, constraints, and environment. ShopSmart helps you discover products that fit your needs.
+          Ask detailed questions about hardware specifications, trade-offs, and pricing across live Amazon India and Flipkart listings.
         </p>
       </section>
 
       {/* 2. Example Scenarios Chips */}
-      <section
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "12px",
-          flexWrap: "wrap",
-        }}
-      >
-        <span style={{ fontSize: "0.82rem", fontWeight: "600", color: "var(--color-text-muted)" }}>
-          Example Scenarios:
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+        <span style={{ fontSize: "0.78rem", fontWeight: "600", color: "var(--color-text-muted)" }}>
+          Quick Prompts:
         </span>
         {SCENARIOS.map((sc, i) => (
           <button
@@ -188,10 +165,10 @@ export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
               gap: "6px",
               backgroundColor: "var(--color-white)",
               border: "1px solid var(--color-border)",
-              borderRadius: "var(--radius-full)",
-              padding: "7px 16px",
-              fontSize: "0.82rem",
-              fontWeight: "600",
+              borderRadius: "var(--radius-sm)",
+              padding: "5px 10px",
+              fontSize: "0.78rem",
+              fontWeight: "500",
               color: "var(--color-navy)",
               boxShadow: "var(--shadow-xs)",
               cursor: "pointer",
@@ -212,56 +189,55 @@ export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
             <span>{sc.label}</span>
           </button>
         ))}
-      </section>
+      </div>
 
-      {/* 3. Conversation Panel */}
+      {/* 3. Conversation Card */}
       <section
         className="card-clean"
         style={{
-          borderRadius: "var(--radius-xl)",
+          borderRadius: "var(--radius-lg)",
           overflow: "hidden",
-          boxShadow: "var(--shadow-md)",
           display: "flex",
           flexDirection: "column",
-          minHeight: "520px",
-          maxHeight: "700px",
+          minHeight: "480px",
+          maxHeight: "680px",
           backgroundColor: "var(--color-white)",
         }}
       >
         {/* Panel Header */}
         <div
           style={{
-            padding: "16px 24px",
+            padding: "12px 18px",
             borderBottom: "1px solid var(--color-border)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            backgroundColor: "#F8FAFC",
+            backgroundColor: "var(--color-bg-subtle)",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <div
               style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "10px",
-                backgroundColor: "var(--color-lavender)",
-                color: "var(--color-purple)",
+                width: "28px",
+                height: "28px",
+                borderRadius: "var(--radius-sm)",
+                backgroundColor: "var(--color-royal-blue)",
+                color: "#FFFFFF",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Bot size={20} />
+              <Bot size={16} />
             </div>
             <div>
-              <h3 style={{ fontSize: "0.95rem", fontWeight: "700", color: "var(--color-navy)" }}>
-                ShopSmart AI Engine
-              </h3>
-              <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
+              <h2 style={{ fontSize: "0.88rem", fontWeight: "600", color: "var(--color-navy)" }}>
+                Shopping Inference Session
+              </h2>
+              <span style={{ fontSize: "0.72rem", color: "var(--color-text-secondary)" }}>
                 {currentProducts.length > 0
-                  ? `Contextually grounded in ${currentProducts.length} discovered products`
-                  : "Ready to assist with questions across tech & lifestyle catalogs"}
+                  ? `Active catalog context: ${currentProducts.length} verified products`
+                  : "Ready for shopping questions"}
               </span>
             </div>
           </div>
@@ -272,10 +248,10 @@ export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
           style={{
             flex: 1,
             overflowY: "auto",
-            padding: "24px",
+            padding: "20px",
             display: "flex",
             flexDirection: "column",
-            gap: "20px",
+            gap: "16px",
             backgroundColor: "#FFFFFF",
           }}
         >
@@ -286,26 +262,26 @@ export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
                 key={idx}
                 style={{
                   display: "flex",
-                  gap: "12px",
+                  gap: "10px",
                   alignSelf: isUser ? "flex-end" : "flex-start",
-                  maxWidth: isUser ? "80%" : "88%",
+                  maxWidth: isUser ? "85%" : "90%",
                 }}
               >
                 {!isUser && (
                   <div
                     style={{
-                      width: "32px",
-                      height: "32px",
-                      borderRadius: "50%",
-                      backgroundColor: "var(--color-lavender)",
-                      color: "var(--color-purple)",
+                      width: "28px",
+                      height: "28px",
+                      borderRadius: "var(--radius-sm)",
+                      backgroundColor: "var(--color-royal-blue-light)",
+                      color: "var(--color-royal-blue)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       flexShrink: 0,
                     }}
                   >
-                    <Sparkles size={16} />
+                    <Bot size={15} />
                   </div>
                 )}
 
@@ -313,12 +289,12 @@ export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
                   style={{
                     backgroundColor: isUser ? "var(--color-royal-blue)" : "var(--color-bg-subtle)",
                     color: isUser ? "#FFFFFF" : "var(--color-text-primary)",
-                    padding: "14px 18px",
-                    borderRadius: isUser ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                    fontSize: "0.92rem",
-                    lineHeight: "1.6",
+                    padding: "10px 16px",
+                    borderRadius: "var(--radius-md)",
+                    fontSize: "0.88rem",
+                    lineHeight: "1.55",
                     border: isUser ? "none" : "1px solid var(--color-border)",
-                    boxShadow: isUser ? "0 2px 8px rgba(37, 99, 235, 0.25)" : "none",
+                    boxShadow: "var(--shadow-xs)",
                     whiteSpace: "pre-wrap",
                     wordBreak: "break-word",
                   }}
@@ -329,18 +305,18 @@ export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
                 {isUser && (
                   <div
                     style={{
-                      width: "32px",
-                      height: "32px",
-                      borderRadius: "50%",
-                      backgroundColor: "#F1F5F9",
-                      color: "var(--color-navy)",
+                      width: "28px",
+                      height: "28px",
+                      borderRadius: "var(--radius-sm)",
+                      backgroundColor: "var(--color-navy)",
+                      color: "#FFFFFF",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       flexShrink: 0,
                     }}
                   >
-                    <User size={16} />
+                    <User size={14} />
                   </div>
                 )}
               </div>
@@ -348,33 +324,33 @@ export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
           })}
 
           {loading && (
-            <div style={{ display: "flex", gap: "12px", alignSelf: "flex-start" }}>
+            <div style={{ display: "flex", gap: "10px", alignSelf: "flex-start" }}>
               <div
                 style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "50%",
-                  backgroundColor: "var(--color-lavender)",
-                  color: "var(--color-purple)",
+                  width: "28px",
+                  height: "28px",
+                  borderRadius: "var(--radius-sm)",
+                  backgroundColor: "var(--color-royal-blue-light)",
+                  color: "var(--color-royal-blue)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
                 }}
               >
-                <Loader2 size={16} className="animate-spin" />
+                <Loader2 size={15} className="animate-spin" />
               </div>
               <div
                 style={{
                   backgroundColor: "var(--color-bg-subtle)",
                   border: "1px solid var(--color-border)",
-                  padding: "12px 18px",
-                  borderRadius: "18px 18px 18px 4px",
-                  fontSize: "0.88rem",
+                  padding: "10px 14px",
+                  borderRadius: "var(--radius-md)",
+                  fontSize: "0.84rem",
                   color: "var(--color-text-secondary)",
                 }}
               >
-                Evaluating specifications and matching evidence...
+                Analyzing product specs and verifying trade-offs...
               </div>
             </div>
           )}
@@ -386,17 +362,17 @@ export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
         {suggestedFollowups.length > 0 && !loading && (
           <div
             style={{
-              padding: "10px 20px",
-              backgroundColor: "#F8FAFC",
+              padding: "8px 16px",
+              backgroundColor: "var(--color-bg-subtle)",
               borderTop: "1px solid var(--color-border)",
               display: "flex",
               alignItems: "center",
-              gap: "8px",
+              gap: "6px",
               overflowX: "auto",
             }}
           >
-            <span style={{ fontSize: "0.78rem", fontWeight: "600", color: "var(--color-text-muted)", flexShrink: 0 }}>
-              Follow-up:
+            <span style={{ fontSize: "0.74rem", fontWeight: "600", color: "var(--color-text-muted)", flexShrink: 0 }}>
+              Suggestions:
             </span>
             {suggestedFollowups.map((f, i) => (
               <button
@@ -406,9 +382,9 @@ export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
                 style={{
                   backgroundColor: "var(--color-white)",
                   border: "1px solid var(--color-border)",
-                  borderRadius: "var(--radius-full)",
-                  padding: "4px 12px",
-                  fontSize: "0.78rem",
+                  borderRadius: "var(--radius-xs)",
+                  padding: "3px 8px",
+                  fontSize: "0.76rem",
                   color: "var(--color-text-secondary)",
                   cursor: "pointer",
                   whiteSpace: "nowrap",
@@ -437,153 +413,155 @@ export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
             handleSend();
           }}
           style={{
-            padding: "14px 20px",
+            padding: "12px 16px",
             backgroundColor: "var(--color-white)",
             borderTop: "1px solid var(--color-border)",
             display: "flex",
             alignItems: "center",
-            gap: "10px",
+            gap: "8px",
           }}
         >
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about specs, budget, battery life, or compare products..."
+            placeholder="Ask about specs, compare features, or inquire about trade-offs..."
             disabled={loading}
             style={{
               flex: 1,
-              padding: "10px 16px",
-              backgroundColor: "#F8FAFC",
               border: "1px solid var(--color-border)",
-              borderRadius: "var(--radius-md)",
-              fontSize: "0.92rem",
+              borderRadius: "var(--radius-sm)",
+              padding: "8px 12px",
+              fontSize: "0.88rem",
               color: "var(--color-text-primary)",
               outline: "none",
             }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = "var(--color-royal-blue)")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "var(--color-royal-blue)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = "var(--color-border)";
+            }}
           />
 
           <button
             type="submit"
             disabled={loading || !input.trim()}
             className="btn-primary"
-            style={{
-              padding: "10px 20px",
-              borderRadius: "var(--radius-md)",
-            }}
+            style={{ padding: "8px 16px", borderRadius: "var(--radius-sm)" }}
           >
             <span>Send</span>
-            <Send size={15} />
+            <Send size={14} />
           </button>
         </form>
       </section>
 
-      {/* 4. Inline Product Recommendations Shelf (if context products exist) */}
+      {/* 4. Active Catalog Context Products */}
       {currentProducts.length > 0 && (
         <section>
-          <div style={{ marginBottom: "16px" }}>
-            <h3 style={{ fontSize: "1.2rem", fontWeight: "700", color: "var(--color-navy)", marginBottom: "4px" }}>
-              Active Discovered Products in Conversation Context
-            </h3>
-            <p style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)" }}>
-              The AI assistant references these exact products from your search results.
-            </p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "12px" }}>
+            <div>
+              <h3 style={{ fontSize: "1rem", fontWeight: "600", color: "var(--color-navy)" }}>
+                Active Context Listings ({currentProducts.length})
+              </h3>
+              <span style={{ fontSize: "0.78rem", color: "var(--color-text-muted)" }}>
+                The assistant answers questions grounded in these products.
+              </span>
+            </div>
           </div>
 
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-              gap: "16px",
+              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+              gap: "12px",
             }}
           >
             {currentProducts.slice(0, 4).map((p) => {
-              const isCompared = selectedCompareIds.includes(p.id);
+              const isComp = selectedCompareIds.includes(p.id);
               return (
                 <div
                   key={p.id}
                   className="card-clean"
                   style={{
-                    padding: "14px",
+                    padding: "10px 12px",
                     display: "flex",
                     alignItems: "center",
-                    gap: "14px",
-                    borderRadius: "var(--radius-md)",
+                    gap: "10px",
+                    borderRadius: "var(--radius-sm)",
                   }}
                 >
                   <div
                     style={{
-                      width: "60px",
-                      height: "60px",
-                      backgroundColor: "#F8FAFC",
-                      borderRadius: "var(--radius-sm)",
-                      padding: "4px",
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "var(--radius-xs)",
+                      border: "1px solid var(--color-border)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
+                      padding: "4px",
+                      backgroundColor: "#FFFFFF",
                       flexShrink: 0,
                     }}
                   >
                     {p.image_url ? (
-                      <img src={p.image_url} alt={p.title} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
+                      <img src={p.image_url} alt={p.title} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
                     ) : (
-                      <Sparkles size={20} color="var(--color-royal-blue)" />
+                      <Headphones size={18} color="var(--color-text-muted)" />
                     )}
                   </div>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--color-royal-blue)", textTransform: "uppercase" }}>
-                      {p.brand || p.source}
-                    </span>
-                    <h5
+                    <div
                       style={{
-                        fontSize: "0.82rem",
+                        fontSize: "0.8rem",
                         fontWeight: "600",
                         color: "var(--color-navy)",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
-                        marginBottom: "4px",
                       }}
                       title={p.title}
                     >
                       {p.title}
-                    </h5>
-                    <div style={{ fontSize: "0.88rem", fontWeight: "800", color: "var(--color-navy)" }}>
-                      {p.price !== null ? `₹${p.price.toLocaleString("en-IN")}` : "₹--"}
+                    </div>
+                    <div style={{ fontSize: "0.76rem", color: "var(--color-text-secondary)" }}>
+                      {p.price !== null ? `₹${p.price.toLocaleString("en-IN")}` : "Price unavailable"}
                     </div>
                   </div>
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+                    <button
+                      type="button"
+                      onClick={() => onToggleCompare(p)}
+                      title={isComp ? "Remove from comparison" : "Add to comparison"}
+                      style={{
+                        padding: "5px",
+                        borderRadius: "var(--radius-xs)",
+                        backgroundColor: isComp ? "var(--color-royal-blue)" : "var(--color-bg-subtle)",
+                        color: isComp ? "#FFFFFF" : "var(--color-navy)",
+                        border: "1px solid var(--color-border)",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {isComp ? <Check size={12} strokeWidth={2.5} /> : <Scale size={12} />}
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => setQuickViewProduct(p)}
                       title="Quick View"
                       style={{
                         padding: "5px",
-                        borderRadius: "6px",
-                        backgroundColor: "#F1F5F9",
-                        color: "var(--color-navy)",
+                        borderRadius: "var(--radius-xs)",
+                        backgroundColor: "var(--color-white)",
+                        color: "var(--color-text-secondary)",
+                        border: "1px solid var(--color-border)",
                         cursor: "pointer",
                       }}
                     >
-                      <Eye size={14} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onToggleCompare(p)}
-                      title={isCompared ? "Compared" : "Add to Compare"}
-                      style={{
-                        padding: "5px",
-                        borderRadius: "6px",
-                        backgroundColor: isCompared ? "var(--color-royal-blue)" : "#F1F5F9",
-                        color: isCompared ? "#FFFFFF" : "var(--color-navy)",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {isCompared ? <Check size={14} /> : <Scale size={14} />}
+                      <Eye size={12} />
                     </button>
                   </div>
                 </div>

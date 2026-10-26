@@ -230,7 +230,7 @@ In a PowerShell window:
 *Or manually:*
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\pip.exe install -r backend\requirements.txt
+.\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
 $env:PYTHONPATH = "."
 .\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
@@ -261,11 +261,16 @@ Open your browser at `http://localhost:5173`.
 
 ---
 
-### Step 5: Verify or Update ScaleMax AI Settings In-App
+### Step 5: Verify ScaleMax AI Settings via Diagnostic Script
 
-1. Click the **AI Status Badge** in the top-right header (displays `ScaleMax: ModelName` or `AI Fallback Active`).
-2. The modal allows you to view masked status, test connectivity, update `SCALEMAX_BASE_URL`, enter your `SCALEMAX_API_KEY`, or change `SCALEMAX_MODEL` on the fly without restarting the backend.
-3. Click **Save & Test Connection**. When verified, the indicator turns emerald green (`AI CONFIGURED`).
+ScaleMax credentials remain strictly server-side in `backend/.env` and are never exposed in the customer frontend.
+To verify your live API key, endpoint connection, and model readiness:
+
+```powershell
+.\scripts\test-scalemax.ps1
+```
+
+The script reports round-trip inference latency, model completion duration, and masked key status.
 
 ---
 
@@ -298,10 +303,9 @@ Open your browser at `http://localhost:5173`.
 
 ---
 
-## 5. Running Automated Tests
+## 5. Running Automated Tests & Diagnostics
 
-Run the full test suite via PowerShell:
-
+### Run the Full Automated Test Suite (51 passing tests):
 ```powershell
 .\scripts\run-tests.ps1
 ```
@@ -311,27 +315,20 @@ Or directly via pytest:
 .\.venv\Scripts\pytest.exe backend\tests -v
 ```
 
-### Test Coverage (43 passing tests):
-- `backend/tests/test_scrapers.py` (7 tests):
-  - Amazon India search listings HTML parsing.
-  - Flipkart electronics list-view HTML parsing.
-  - Flipkart fashion & shoes 4-column grid layout HTML parsing (e.g. "Gym Shoes under 2500").
-  - Flipkart bot verification challenge detection (HTTP 200 captcha / robot check).
-  - Flipkart tolerating missing optional fields (missing rating, review count, list price, brand).
-  - Flipkart JSON-LD structured schema.org fallback extraction.
-  - Amazon anti-bot Robot Check / CAPTCHA challenge detection.
-- `backend/tests/test_search_service.py` (3 tests):
-  - End-to-end mocked search workflow across both retailers.
-  - "Gym Shoes under 2500" pipeline when Amazon returns HTTP 503 anti-bot challenge and Flipkart returns valid products (partial result handling with zero product loss).
-  - All retailers blocked scenario with truthful user-facing verification challenge notices.
-- `backend/tests/test_scalemax_client.py` (14 tests):
-  - Configuration initialization and environment variable reading.
-  - Health checks and readiness reporting (`check_ready`).
-  - OpenAI-compatible completion execution and prompt structure.
-  - Error classification: Authentication (401), Rate Limit (429), Quota Exceeded (insufficient credits), Model Not Found (404), Request Timeout, Upstream Provider Error (502/503).
-  - Safe bounded JSON extraction from raw model markdown.
-  - Verification of zero automatic retries to avoid duplicate billable requests.
-- `backend/tests/test_search_performance.py` (7 tests):
+### Run the Standalone ScaleMax Diagnostic Script:
+To verify your live ScaleMax credentials, measuring DNS connect, token-pack completion latency, and error classification with masked API key output:
+```powershell
+.\scripts\test-scalemax.ps1
+```
+*(Or `.\.venv\Scripts\python.exe scripts\test_scalemax.py`)*
+
+### Test Coverage (51 passing tests):
+- `backend/tests/test_search_performance.py` (12 tests):
+  - **Search A Regression (`wireless earbuds`):** Amazon 503 anti-bot challenge handled cleanly; Flipkart yields 4 valid earbuds; AI status remains unavailable without failing pipeline.
+  - **Search B Regression (`Running Shoes under 1500 black colour`):** Amazon 503 handled; Flipkart yields 4 black running shoes under ₹1500; ScaleMax ranks top 3 with verified reasoning; 4th shoe preserved via deterministic fallback; `ai_status=ready`.
+  - **Both retailers unavailable scenario:** Truthful zero results reported without fabricating fake products.
+  - **Corrupted ranking JSON handling:** ScaleMax returning invalid JSON gracefully falls back to deterministic scoring while preserving 100% of validated products.
+  - **Hallucinated ID filtering:** Any product IDs invented by the LLM that do not exist in the candidate set are strictly stripped; genuine candidates are joined accurately.
   - Parallel retailer scraping execution with individual monotonic timers.
   - Partial results returned when one retailer fails, times out, or is blocked.
   - Total search deadline enforcement.
@@ -339,6 +336,28 @@ Or directly via pytest:
   - Graceful fallback when AI ranking exceeds budget without losing products.
   - Amazon HTTP 503 bot challenge fast failover preserving Flipkart products.
   - Request coalescing (`asyncio.shield`) merging duplicate concurrent searches.
+- `backend/tests/test_scrapers.py` (10 tests):
+  - Amazon India search listings HTML parsing.
+  - Flipkart electronics list-view HTML parsing.
+  - Flipkart fashion & shoes 4-column grid layout HTML parsing (e.g. "Gym Shoes under 2500").
+  - Flipkart bot verification challenge detection (HTTP 200 captcha / robot check).
+  - Flipkart tolerating missing optional fields (missing rating, review count, list price, brand).
+  - Flipkart JSON-LD structured schema.org fallback extraction.
+  - Amazon anti-bot Robot Check / CAPTCHA challenge detection.
+  - **Flipkart Earbuds Extraction (`flipkart_earbuds_search.html`):** Validates boAt, OnePlus, Realme, and Boult extraction.
+  - **Flipkart Running Shoes Extraction (`flipkart_running_shoes_search.html`):** Validates Campus, Asian, Sparx, and Red Tape under ₹1500.
+  - **Flipkart Empty Search Extraction (`flipkart_empty_search.html`):** Validates clean empty list handling without parser exceptions.
+- `backend/tests/test_scalemax_client.py` (14 tests):
+  - Configuration initialization and environment variable reading.
+  - Health checks and readiness reporting (`check_ready`).
+  - OpenAI-compatible completion execution and prompt structure.
+  - Error classification: Authentication (401), Rate Limit (429), Quota Exceeded (insufficient credits), Model Not Found (404), Request Timeout, Upstream Provider Error (502/503).
+  - Safe bounded JSON extraction from raw model markdown.
+  - Verification of zero automatic retries to avoid duplicate billable requests.
+- `backend/tests/test_search_service.py` (3 tests):
+  - End-to-end mocked search workflow across both retailers.
+  - "Gym Shoes under 2500" pipeline when Amazon returns HTTP 503 anti-bot challenge and Flipkart returns valid products (partial result handling with zero product loss).
+  - All retailers blocked scenario with truthful user-facing verification challenge notices.
 - `backend/tests/test_normalizer.py` (6 tests):
   - Numerical INR parsing and edge cases.
   - URL validation.
@@ -383,8 +402,8 @@ ScaleMax operates on a paid token-pack model. ShopSmart implements strict safegu
 
 | Issue | Cause | Solution |
 |---|---|---|
-| **AI Status Badge shows "AI Fallback Active"** | ScaleMax API key or model not configured | Click the AI badge in the top navigation bar, enter your `SCALEMAX_API_KEY` and `SCALEMAX_MODEL` (e.g. `gpt-4o-mini`), and click *Save & Test Connection*. |
-| **ScaleMax 401 Unauthorized** | Invalid or expired API key | Check your key at [ScaleMax Console](https://api.scalemax.pro) and update it in `backend/.env` or via the in-app modal. |
+| **AI Ranking Fails / Rate Limited** | ScaleMax API key or model not configured, or balance depleted | Update your `SCALEMAX_API_KEY` and `SCALEMAX_MODEL` in `backend/.env`. ShopSmart automatically falls back to deterministic factual ranking with zero product loss. |
+| **ScaleMax 401 Unauthorized** | Invalid or expired API key | Check your key at [ScaleMax Console](https://api.scalemax.pro) and update it in `backend/.env`. Verify with `.\scripts\test-scalemax.ps1`. |
 | **ScaleMax 429 Rate Limit / Insufficient Balance** | Token-pack credits depleted or concurrency limit hit | ShopSmart automatically falls back to deterministic ranking. Verify your token balance at ScaleMax. |
 | **Retailer Shows "Verification Challenge"** | Amazon or Flipkart served an anti-bot CAPTCHA | ShopSmart catches this instantly (<100ms), displays a notice, and surfaces valid results from the other retailer. |
 | **Port 8000 already in use** | Another local process is using port 8000 | Specify a different port: `uvicorn backend.app.main:app --port 8001` and update the frontend `.env` if necessary. |

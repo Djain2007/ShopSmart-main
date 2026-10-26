@@ -439,6 +439,7 @@ class AppSearchRequest(BaseModel):
     max_results_per_source: int = 10
     budget_max: Optional[float] = None
     sort_by: Optional[SortPreference] = None
+    enable_ai_ranking: bool = True
 
 
 class AppSearchResponse(BaseModel):

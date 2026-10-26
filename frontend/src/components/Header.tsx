@@ -1,15 +1,13 @@
 import React, { useState } from "react";
 import {
-  Sparkles,
+  ShoppingBag,
   Search,
-  Scale,
   Heart,
-  User,
-  CheckCircle2,
-  AlertTriangle,
-  CloudOff,
+  History,
+  SlidersHorizontal,
+  Menu,
+  X,
 } from "lucide-react";
-import type { SystemStatus } from "../types";
 
 export type NavTab = "home" | "explore" | "assistant" | "compare";
 
@@ -18,11 +16,10 @@ interface HeaderProps {
   onTabChange: (tab: NavTab) => void;
   compareCount: number;
   savedCount: number;
-  status: SystemStatus | null;
   onSearch: (query: string) => void;
   onOpenSaved: () => void;
+  onOpenHistory: () => void;
   onOpenProfile: () => void;
-  onOpenAIConfig: () => void;
   loading?: boolean;
 }
 
@@ -31,54 +28,29 @@ export const Header: React.FC<HeaderProps> = ({
   onTabChange,
   compareCount,
   savedCount,
-  status,
   onSearch,
   onOpenSaved,
+  onOpenHistory,
   onOpenProfile,
-  onOpenAIConfig,
   loading = false,
 }) => {
   const [navSearch, setNavSearch] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleNavSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!navSearch.trim() || loading) return;
     onSearch(navSearch.trim());
     onTabChange("explore");
+    setMobileMenuOpen(false);
   };
 
-  const getStatusBadge = () => {
-    const aiState = status?.ai_status || "unavailable";
-    switch (aiState) {
-      case "ready":
-        return {
-          icon: <CheckCircle2 size={13} color="#059669" />,
-          label: status?.ai_config.ai_model ? `ScaleMax: ${status.ai_config.ai_model}` : "ScaleMax Ready",
-          style: { backgroundColor: "#ECFDF5", color: "#059669", borderColor: "#A7F3D0" },
-        };
-      case "connected":
-        return {
-          icon: <Sparkles size={13} color="#2563EB" />,
-          label: "AI Configured",
-          style: { backgroundColor: "#EFF6FF", color: "#2563EB", borderColor: "#BFDBFE" },
-        };
-      case "degraded":
-        return {
-          icon: <AlertTriangle size={13} color="#D97706" />,
-          label: "Factual Fallback",
-          style: { backgroundColor: "#FFFBEB", color: "#D97706", borderColor: "#FDE68A" },
-        };
-      case "unavailable":
-      default:
-        return {
-          icon: <CloudOff size={13} color="#64748B" />,
-          label: "ScaleMax Offline",
-          style: { backgroundColor: "#F8FAFC", color: "#64748B", borderColor: "#E2E8F0" },
-        };
-    }
-  };
-
-  const badge = getStatusBadge();
+  const navItems: { id: NavTab; label: string; count?: number }[] = [
+    { id: "home", label: "Home" },
+    { id: "explore", label: "Explore & Search" },
+    { id: "assistant", label: "AI Assistant" },
+    { id: "compare", label: "Compare", count: compareCount },
+  ];
 
   return (
     <header
@@ -88,407 +60,453 @@ export const Header: React.FC<HeaderProps> = ({
         position: "sticky",
         top: 0,
         zIndex: 1000,
-        boxShadow: "0 1px 3px rgba(16, 24, 47, 0.04)",
+        boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
       }}
     >
       <div
         style={{
-          maxWidth: "1360px",
+          maxWidth: "1280px",
           margin: "0 auto",
-          padding: "12px 24px",
+          padding: "0 20px",
+          height: "60px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: "20px",
-          flexWrap: "wrap",
+          gap: "16px",
         }}
       >
-        {/* Left Section: Brand Logo */}
+        {/* Left: Brand Wordmark */}
         <div
-          onClick={() => onTabChange("home")}
+          onClick={() => {
+            onTabChange("home");
+            setMobileMenuOpen(false);
+          }}
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "12px",
+            gap: "10px",
             cursor: "pointer",
             userSelect: "none",
+            flexShrink: 0,
           }}
         >
-          {/* Rounded Royal Blue Square with Sparkle */}
           <div
             style={{
-              width: "42px",
-              height: "42px",
-              borderRadius: "12px",
+              width: "32px",
+              height: "32px",
+              borderRadius: "var(--radius-md)",
               backgroundColor: "var(--color-royal-blue)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "#FFFFFF",
-              boxShadow: "0 4px 10px rgba(37, 99, 235, 0.3)",
-              flexShrink: 0,
+              boxShadow: "0 2px 4px rgba(37, 99, 235, 0.25)",
             }}
           >
-            <Sparkles size={22} fill="#FFFFFF" />
+            <ShoppingBag size={18} strokeWidth={2.2} />
           </div>
 
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <span
-                style={{
-                  fontFamily: "var(--font-heading)",
-                  fontSize: "1.35rem",
-                  fontWeight: "800",
-                  color: "var(--color-navy)",
-                  letterSpacing: "-0.03em",
-                  lineHeight: "1.1",
-                }}
-              >
-                Shop<span style={{ color: "var(--color-royal-blue)" }}>Smart</span>
-              </span>
-            </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
             <span
               style={{
-                fontSize: "0.68rem",
+                fontFamily: "var(--font-heading)",
+                fontSize: "1.18rem",
                 fontWeight: "700",
-                letterSpacing: "0.08em",
-                color: "var(--color-text-secondary)",
-                textTransform: "uppercase",
+                color: "var(--color-navy)",
+                letterSpacing: "-0.03em",
               }}
             >
-              AI SHOPPING ASSISTANT
+              Shop<span style={{ color: "var(--color-royal-blue)" }}>Smart</span>
             </span>
           </div>
         </div>
 
-        {/* Center Search Bar */}
+        {/* Center: Desktop Navigation Links */}
+        <nav
+          style={{
+            display: "none",
+            alignItems: "center",
+            gap: "4px",
+          }}
+          className="desktop-nav"
+        >
+          {navItems.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onTabChange(item.id)}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "var(--radius-sm)",
+                  fontSize: "0.86rem",
+                  fontWeight: isActive ? "600" : "500",
+                  color: isActive ? "var(--color-royal-blue)" : "var(--color-text-secondary)",
+                  backgroundColor: isActive ? "var(--color-royal-blue-light)" : "transparent",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  transition: "all var(--transition-fast)",
+                  cursor: "pointer",
+                  outline: "none",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = "var(--color-bg-subtle)";
+                    e.currentTarget.style.color = "var(--color-navy)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                    e.currentTarget.style.color = "var(--color-text-secondary)";
+                  }
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.boxShadow = "0 0 0 2px rgba(37, 99, 235, 0.25)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              >
+                <span>{item.label}</span>
+                {item.count !== undefined && item.count > 0 && (
+                  <span
+                    style={{
+                      fontSize: "0.72rem",
+                      fontWeight: "700",
+                      backgroundColor: isActive ? "var(--color-royal-blue)" : "var(--color-bg-muted)",
+                      color: isActive ? "#FFFFFF" : "var(--color-navy)",
+                      padding: "1px 6px",
+                      borderRadius: "var(--radius-sm)",
+                    }}
+                  >
+                    {item.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Center-Right: Compact Nav Search Input */}
         <form
           onSubmit={handleNavSearchSubmit}
           style={{
-            flex: "1 1 340px",
-            maxWidth: "520px",
-            minWidth: "260px",
+            display: "none",
+            alignItems: "center",
+            flex: "1 1 260px",
+            maxWidth: "360px",
           }}
+          className="desktop-search"
         >
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              backgroundColor: "#F8FAFC",
+              width: "100%",
+              backgroundColor: "var(--color-bg-subtle)",
               border: "1px solid var(--color-border)",
-              borderRadius: "var(--radius-full)",
-              padding: "4px 6px 4px 14px",
-              transition: "border-color var(--transition-fast), box-shadow var(--transition-fast)",
+              borderRadius: "var(--radius-md)",
+              padding: "5px 10px",
+              transition: "all var(--transition-fast)",
             }}
             onFocus={(e) => {
               e.currentTarget.style.borderColor = "var(--color-royal-blue)";
-              e.currentTarget.style.boxShadow = "0 0 0 3px rgba(37, 99, 235, 0.12)";
               e.currentTarget.style.backgroundColor = "#FFFFFF";
+              e.currentTarget.style.boxShadow = "0 0 0 2px rgba(37, 99, 235, 0.12)";
             }}
             onBlur={(e) => {
               e.currentTarget.style.borderColor = "var(--color-border)";
+              e.currentTarget.style.backgroundColor = "var(--color-bg-subtle)";
               e.currentTarget.style.boxShadow = "none";
-              e.currentTarget.style.backgroundColor = "#F8FAFC";
             }}
           >
-            <Search size={17} color="var(--color-text-secondary)" style={{ flexShrink: 0, marginRight: "8px" }} />
+            <Search size={15} color="var(--color-text-muted)" style={{ marginRight: "8px", flexShrink: 0 }} />
             <input
               type="text"
               value={navSearch}
               onChange={(e) => setNavSearch(e.target.value)}
-              placeholder="Search products in plain words (e.g. laptop for coding under ₹80,000)"
+              placeholder="Search Amazon & Flipkart..."
               style={{
                 border: "none",
-                background: "none",
+                background: "transparent",
                 outline: "none",
                 width: "100%",
-                fontSize: "0.86rem",
+                fontSize: "0.84rem",
                 color: "var(--color-text-primary)",
               }}
             />
-            <button
-              type="submit"
-              style={{
-                backgroundColor: "var(--color-royal-blue)",
-                color: "#FFFFFF",
-                fontWeight: "600",
-                fontSize: "0.82rem",
-                padding: "6px 14px",
-                borderRadius: "var(--radius-full)",
-                flexShrink: 0,
-                cursor: "pointer",
-                transition: "background-color var(--transition-fast)",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-royal-blue-hover)")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--color-royal-blue)")}
-            >
-              Search
-            </button>
           </div>
         </form>
 
-        {/* Main Navigation: Rounded Pill Container */}
-        <nav
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            backgroundColor: "#F1F5F9",
-            padding: "4px",
-            borderRadius: "var(--radius-full)",
-            border: "1px solid var(--color-border)",
-            gap: "2px",
-          }}
-        >
-          {/* Home */}
+        {/* Right Section: Customer Shopping Controls */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          {/* Search History Action */}
           <button
             type="button"
-            onClick={() => onTabChange("home")}
+            onClick={onOpenHistory}
+            title="Search History"
+            aria-label="Search History"
             style={{
-              padding: "7px 16px",
-              borderRadius: "var(--radius-full)",
-              fontSize: "0.85rem",
-              fontWeight: activeTab === "home" ? "700" : "600",
-              color: activeTab === "home" ? "#FFFFFF" : "var(--color-text-secondary)",
-              backgroundColor: activeTab === "home" ? "var(--color-royal-blue)" : "transparent",
-              boxShadow: activeTab === "home" ? "0 2px 6px rgba(37, 99, 235, 0.28)" : "none",
-              transition: "all var(--transition-fast)",
-              cursor: "pointer",
-            }}
-          >
-            Home
-          </button>
-
-          {/* Explore & Search */}
-          <button
-            type="button"
-            onClick={() => onTabChange("explore")}
-            style={{
-              padding: "7px 16px",
-              borderRadius: "var(--radius-full)",
-              fontSize: "0.85rem",
-              fontWeight: activeTab === "explore" ? "700" : "600",
-              color: activeTab === "explore" ? "#FFFFFF" : "var(--color-text-secondary)",
-              backgroundColor: activeTab === "explore" ? "var(--color-royal-blue)" : "transparent",
-              boxShadow: activeTab === "explore" ? "0 2px 6px rgba(37, 99, 235, 0.28)" : "none",
-              transition: "all var(--transition-fast)",
-              cursor: "pointer",
-            }}
-          >
-            Explore & Search
-          </button>
-
-          {/* AI Assistant */}
-          <button
-            type="button"
-            onClick={() => onTabChange("assistant")}
-            style={{
-              padding: "7px 16px",
-              borderRadius: "var(--radius-full)",
-              fontSize: "0.85rem",
-              fontWeight: activeTab === "assistant" ? "700" : "600",
-              color: activeTab === "assistant" ? "#FFFFFF" : "var(--color-text-secondary)",
-              backgroundColor: activeTab === "assistant" ? "var(--color-royal-blue)" : "transparent",
-              boxShadow: activeTab === "assistant" ? "0 2px 6px rgba(37, 99, 235, 0.28)" : "none",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              transition: "all var(--transition-fast)",
-              cursor: "pointer",
-            }}
-          >
-            <Sparkles size={14} color={activeTab === "assistant" ? "#FFFFFF" : "#6D28D9"} />
-            <span>AI Assistant</span>
-          </button>
-
-          {/* Compare */}
-          <button
-            type="button"
-            onClick={() => onTabChange("compare")}
-            style={{
-              padding: "7px 16px",
-              borderRadius: "var(--radius-full)",
-              fontSize: "0.85rem",
-              fontWeight: activeTab === "compare" ? "700" : "600",
-              color: activeTab === "compare" ? "#FFFFFF" : "var(--color-text-secondary)",
-              backgroundColor: activeTab === "compare" ? "var(--color-royal-blue)" : "transparent",
-              boxShadow: activeTab === "compare" ? "0 2px 6px rgba(37, 99, 235, 0.28)" : "none",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              transition: "all var(--transition-fast)",
-              cursor: "pointer",
-            }}
-          >
-            <span>Compare</span>
-            {compareCount > 0 && (
-              <span
-                style={{
-                  fontSize: "0.72rem",
-                  fontWeight: "700",
-                  backgroundColor: activeTab === "compare" ? "#FFFFFF" : "var(--color-royal-blue)",
-                  color: activeTab === "compare" ? "var(--color-royal-blue)" : "#FFFFFF",
-                  padding: "1px 6px",
-                  borderRadius: "var(--radius-full)",
-                }}
-              >
-                {compareCount}
-              </span>
-            )}
-          </button>
-        </nav>
-
-        {/* Right Section: Action Icons & AI Badge */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          {/* AI Status Badge */}
-          <button
-            type="button"
-            onClick={onOpenAIConfig}
-            title="Configure ScaleMax AI connection and API Key"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "5px 11px",
-              borderRadius: "var(--radius-full)",
-              fontSize: "0.76rem",
-              fontWeight: "600",
-              border: "1px solid",
-              cursor: "pointer",
-              transition: "transform var(--transition-fast)",
-              ...badge.style,
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
-            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-          >
-            {badge.icon}
-            <span>{badge.label}</span>
-          </button>
-
-          {/* Compare Scale Icon */}
-          <button
-            type="button"
-            onClick={() => onTabChange("compare")}
-            title="Open Product Comparison"
-            style={{
-              width: "38px",
-              height: "38px",
+              width: "34px",
+              height: "34px",
               borderRadius: "var(--radius-md)",
-              backgroundColor: activeTab === "compare" ? "var(--color-lavender)" : "var(--color-white)",
+              backgroundColor: "transparent",
               border: "1px solid var(--color-border)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              position: "relative",
-              color: activeTab === "compare" ? "var(--color-royal-blue)" : "var(--color-navy)",
+              color: "var(--color-text-secondary)",
               cursor: "pointer",
               transition: "all var(--transition-fast)",
+              outline: "none",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--color-royal-blue)")}
-            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--color-bg-subtle)";
+              e.currentTarget.style.borderColor = "var(--color-border-hover)";
+              e.currentTarget.style.color = "var(--color-navy)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+              e.currentTarget.style.borderColor = "var(--color-border)";
+              e.currentTarget.style.color = "var(--color-text-secondary)";
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.boxShadow = "0 0 0 2px rgba(37, 99, 235, 0.25)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.boxShadow = "none";
+            }}
           >
-            <Scale size={18} />
-            {compareCount > 0 && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: "-4px",
-                  right: "-4px",
-                  backgroundColor: "var(--color-royal-blue)",
-                  color: "#FFFFFF",
-                  fontSize: "0.68rem",
-                  fontWeight: "700",
-                  width: "18px",
-                  height: "18px",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-                }}
-              >
-                {compareCount}
-              </span>
-            )}
+            <History size={16} />
           </button>
 
-          {/* Wishlist Heart Icon */}
+          {/* Wishlist Saved Action */}
           <button
             type="button"
             onClick={onOpenSaved}
-            title="Wishlist & Saved Items"
+            title="Saved Items"
+            aria-label={`Saved Items (${savedCount})`}
             style={{
-              width: "38px",
-              height: "38px",
+              height: "34px",
+              padding: "0 10px",
               borderRadius: "var(--radius-md)",
-              backgroundColor: "var(--color-white)",
+              backgroundColor: "transparent",
+              border: "1px solid var(--color-border)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              color: savedCount > 0 ? "var(--color-rose)" : "var(--color-text-secondary)",
+              fontSize: "0.82rem",
+              fontWeight: "600",
+              cursor: "pointer",
+              transition: "all var(--transition-fast)",
+              outline: "none",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--color-bg-subtle)";
+              e.currentTarget.style.borderColor = "var(--color-border-hover)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+              e.currentTarget.style.borderColor = "var(--color-border)";
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.boxShadow = "0 0 0 2px rgba(37, 99, 235, 0.25)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.boxShadow = "none";
+            }}
+          >
+            <Heart size={15} fill={savedCount > 0 ? "var(--color-rose)" : "none"} />
+            <span style={{ color: "var(--color-navy)" }}>{savedCount}</span>
+          </button>
+
+          {/* Preferences Action */}
+          <button
+            type="button"
+            onClick={onOpenProfile}
+            title="Shopping Preferences"
+            aria-label="Shopping Preferences"
+            style={{
+              width: "34px",
+              height: "34px",
+              borderRadius: "var(--radius-md)",
+              backgroundColor: "transparent",
               border: "1px solid var(--color-border)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              position: "relative",
-              color: savedCount > 0 ? "var(--color-rose)" : "var(--color-navy)",
+              color: "var(--color-text-secondary)",
               cursor: "pointer",
               transition: "all var(--transition-fast)",
+              outline: "none",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--color-rose)")}
-            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--color-bg-subtle)";
+              e.currentTarget.style.borderColor = "var(--color-border-hover)";
+              e.currentTarget.style.color = "var(--color-navy)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+              e.currentTarget.style.borderColor = "var(--color-border)";
+              e.currentTarget.style.color = "var(--color-text-secondary)";
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.boxShadow = "0 0 0 2px rgba(37, 99, 235, 0.25)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.boxShadow = "none";
+            }}
           >
-            <Heart size={18} fill={savedCount > 0 ? "var(--color-rose)" : "none"} />
-            {savedCount > 0 && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: "-4px",
-                  right: "-4px",
-                  backgroundColor: "var(--color-rose)",
-                  color: "#FFFFFF",
-                  fontSize: "0.68rem",
-                  fontWeight: "700",
-                  width: "18px",
-                  height: "18px",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-                }}
-              >
-                {savedCount}
-              </span>
-            )}
+            <SlidersHorizontal size={15} />
           </button>
 
-          {/* Profile User Icon */}
+          {/* Mobile Navigation Toggle */}
           <button
             type="button"
-            onClick={onOpenProfile}
-            title="User Profile & Settings"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="mobile-toggle"
+            title="Toggle Menu"
+            aria-label="Toggle navigation menu"
             style={{
-              width: "38px",
-              height: "38px",
+              width: "34px",
+              height: "34px",
               borderRadius: "var(--radius-md)",
-              backgroundColor: "var(--color-white)",
+              backgroundColor: "transparent",
               border: "1px solid var(--color-border)",
-              display: "flex",
+              display: "none",
               alignItems: "center",
               justifyContent: "center",
               color: "var(--color-navy)",
               cursor: "pointer",
-              transition: "all var(--transition-fast)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "var(--color-royal-blue)";
-              e.currentTarget.style.color = "var(--color-royal-blue)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "var(--color-border)";
-              e.currentTarget.style.color = "var(--color-navy)";
             }}
           >
-            <User size={18} />
+            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
       </div>
+
+      {/* Mobile Menu Dropdown */}
+      {mobileMenuOpen && (
+        <div
+          style={{
+            borderTop: "1px solid var(--color-border)",
+            backgroundColor: "var(--color-white)",
+            padding: "16px 20px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+          }}
+          className="mobile-menu"
+        >
+          <form onSubmit={handleNavSearchSubmit} style={{ width: "100%" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                width: "100%",
+                backgroundColor: "var(--color-bg-subtle)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "var(--radius-md)",
+                padding: "8px 12px",
+              }}
+            >
+              <Search size={16} color="var(--color-text-muted)" style={{ marginRight: "8px" }} />
+              <input
+                type="text"
+                value={navSearch}
+                onChange={(e) => setNavSearch(e.target.value)}
+                placeholder="Search Amazon & Flipkart..."
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  outline: "none",
+                  width: "100%",
+                  fontSize: "0.88rem",
+                  color: "var(--color-text-primary)",
+                }}
+              />
+            </div>
+          </form>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            {navItems.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    onTabChange(item.id);
+                    setMobileMenuOpen(false);
+                  }}
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: "var(--radius-sm)",
+                    fontSize: "0.9rem",
+                    fontWeight: isActive ? "600" : "500",
+                    color: isActive ? "var(--color-royal-blue)" : "var(--color-navy)",
+                    backgroundColor: isActive ? "var(--color-royal-blue-light)" : "transparent",
+                    textAlign: "left",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    cursor: "pointer",
+                  }}
+                >
+                  <span>{item.label}</span>
+                  {item.count !== undefined && item.count > 0 && (
+                    <span
+                      style={{
+                        fontSize: "0.74rem",
+                        fontWeight: "700",
+                        backgroundColor: "var(--color-royal-blue)",
+                        color: "#FFFFFF",
+                        padding: "1px 6px",
+                        borderRadius: "var(--radius-sm)",
+                      }}
+                    >
+                      {item.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Responsive Inline CSS for Desktop vs Mobile Header Visibility */}
+      <style>{`
+        @media (min-width: 860px) {
+          .desktop-nav {
+            display: flex !important;
+          }
+          .desktop-search {
+            display: flex !important;
+          }
+          .mobile-toggle {
+            display: none !important;
+          }
+          .mobile-menu {
+            display: none !important;
+          }
+        }
+        @media (max-width: 859px) {
+          .desktop-nav {
+            display: none !important;
+          }
+          .desktop-search {
+            display: none !important;
+          }
+          .mobile-toggle {
+            display: flex !important;
+          }
+        }
+      `}</style>
     </header>
   );
 };

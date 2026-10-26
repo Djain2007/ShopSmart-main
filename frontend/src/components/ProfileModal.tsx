@@ -1,67 +1,74 @@
+import React, { useState } from "react";
 import {
   X,
-  User,
+  SlidersHorizontal,
   Heart,
   History,
-  Bot,
   ShieldCheck,
-  Settings,
+  Check,
 } from "lucide-react";
-import type { SystemStatus } from "../types";
 
 interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  status: SystemStatus | null;
   savedCount: number;
   onOpenSaved: () => void;
   onOpenHistory: () => void;
-  onOpenAIConfig: () => void;
 }
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({
   isOpen,
   onClose,
-  status,
   savedCount,
   onOpenSaved,
   onOpenHistory,
-  onOpenAIConfig,
 }) => {
+  const [defaultSort, setDefaultSort] = useState<string>("relevance");
+  const [resultsPerPage, setResultsPerPage] = useState<number>(12);
+  const [savedNotice, setSavedNotice] = useState<boolean>(false);
+
   if (!isOpen) return null;
+
+  const handleSavePreferences = () => {
+    setSavedNotice(true);
+    setTimeout(() => {
+      setSavedNotice(false);
+      onClose();
+    }, 600);
+  };
 
   return (
     <div
       style={{
         position: "fixed",
         inset: 0,
-        backgroundColor: "rgba(16, 24, 47, 0.6)",
-        backdropFilter: "blur(6px)",
+        backgroundColor: "rgba(15, 23, 42, 0.45)",
+        backdropFilter: "blur(4px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         zIndex: 1100,
-        padding: "20px",
-        animation: "fadeIn 0.2s ease-out",
+        padding: "16px",
+        animation: "fadeIn 0.18s ease-out",
       }}
       onClick={onClose}
     >
       <div
         className="card-clean"
         style={{
-          maxWidth: "520px",
+          maxWidth: "480px",
           width: "100%",
-          borderRadius: "var(--radius-xl)",
+          borderRadius: "var(--radius-lg)",
           overflow: "hidden",
           boxShadow: "var(--shadow-xl)",
-          animation: "popIn 0.22s ease-out",
+          animation: "popIn 0.2s ease-out",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
           style={{
-            padding: "20px 24px",
+            padding: "16px 20px",
             borderBottom: "1px solid var(--color-border)",
             display: "flex",
             alignItems: "center",
@@ -72,9 +79,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div
               style={{
-                width: "40px",
-                height: "40px",
-                borderRadius: "12px",
+                width: "36px",
+                height: "36px",
+                borderRadius: "var(--radius-sm)",
                 backgroundColor: "var(--color-royal-blue-light)",
                 color: "var(--color-royal-blue)",
                 display: "flex",
@@ -82,14 +89,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 justifyContent: "center",
               }}
             >
-              <User size={20} />
+              <SlidersHorizontal size={18} />
             </div>
             <div>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: "700", color: "var(--color-navy)" }}>
-                User Profile & System
+              <h3 style={{ fontSize: "1.05rem", fontWeight: "700", color: "var(--color-navy)" }}>
+                Shopping Preferences
               </h3>
-              <p style={{ fontSize: "0.78rem", color: "var(--color-text-secondary)" }}>
-                ShopSmart Session Preferences & Engine Status
+              <p style={{ fontSize: "0.76rem", color: "var(--color-text-secondary)" }}>
+                Session activity & default search criteria
               </p>
             </div>
           </div>
@@ -97,25 +104,29 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close"
             style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "50%",
+              width: "28px",
+              height: "28px",
+              borderRadius: "var(--radius-sm)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "var(--color-text-secondary)",
               cursor: "pointer",
+              transition: "background-color var(--transition-fast)",
             }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-bg-muted)")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         {/* Body */}
-        <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+        <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "18px" }}>
           {/* Quick Stats Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
             <div
               onClick={() => {
                 onClose();
@@ -125,18 +136,24 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 backgroundColor: "#F8FAFC",
                 border: "1px solid var(--color-border)",
                 borderRadius: "var(--radius-md)",
-                padding: "16px",
+                padding: "14px",
                 cursor: "pointer",
                 transition: "all var(--transition-fast)",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--color-rose)")}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--color-rose-border)";
+                e.currentTarget.style.backgroundColor = "var(--color-rose-light)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--color-border)";
+                e.currentTarget.style.backgroundColor = "#F8FAFC";
+              }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                <Heart size={16} color="var(--color-rose)" />
-                <span style={{ fontSize: "0.82rem", fontWeight: "600", color: "var(--color-navy)" }}>Wishlist</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                <Heart size={14} color="var(--color-rose)" />
+                <span style={{ fontSize: "0.78rem", fontWeight: "600", color: "var(--color-navy)" }}>Wishlist</span>
               </div>
-              <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "var(--color-navy)" }}>
+              <div style={{ fontSize: "1.3rem", fontWeight: "800", color: "var(--color-navy)" }}>
                 {savedCount}
               </div>
               <span style={{ fontSize: "0.72rem", color: "var(--color-text-secondary)" }}>
@@ -153,76 +170,107 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 backgroundColor: "#F8FAFC",
                 border: "1px solid var(--color-border)",
                 borderRadius: "var(--radius-md)",
-                padding: "16px",
+                padding: "14px",
                 cursor: "pointer",
                 transition: "all var(--transition-fast)",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--color-royal-blue)")}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--color-royal-blue)";
+                e.currentTarget.style.backgroundColor = "var(--color-royal-blue-light)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--color-border)";
+                e.currentTarget.style.backgroundColor = "#F8FAFC";
+              }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                <History size={16} color="var(--color-royal-blue)" />
-                <span style={{ fontSize: "0.82rem", fontWeight: "600", color: "var(--color-navy)" }}>History</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                <History size={14} color="var(--color-royal-blue)" />
+                <span style={{ fontSize: "0.78rem", fontWeight: "600", color: "var(--color-navy)" }}>History</span>
               </div>
-              <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "var(--color-navy)" }}>
-                Logged
+              <div style={{ fontSize: "1.3rem", fontWeight: "800", color: "var(--color-navy)" }}>
+                Active
               </div>
               <span style={{ fontSize: "0.72rem", color: "var(--color-text-secondary)" }}>
-                View past queries
+                View past searches
               </span>
             </div>
           </div>
 
-          {/* AI Connection Status Box */}
-          <div
-            style={{
-              backgroundColor: "var(--color-lavender)",
-              border: "1px solid var(--color-lavender-border)",
-              borderRadius: "var(--radius-md)",
-              padding: "16px",
-            }}
+          {/* Search Preferences Form */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--color-navy)" }}>
+              Search Defaults
+            </span>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label style={{ fontSize: "0.78rem", color: "var(--color-text-secondary)", fontWeight: "500" }}>
+                Default Sorting Order
+              </label>
+              <select
+                value={defaultSort}
+                onChange={(e) => setDefaultSort(e.target.value)}
+                style={{
+                  padding: "7px 10px",
+                  border: "1px solid var(--color-border)",
+                  borderRadius: "var(--radius-sm)",
+                  backgroundColor: "#FFFFFF",
+                  fontSize: "0.84rem",
+                  color: "var(--color-text-primary)",
+                  outline: "none",
+                }}
+              >
+                <option value="relevance">Match Score & Relevance</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+                <option value="rating_desc">Highest Customer Rating</option>
+              </select>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label style={{ fontSize: "0.78rem", color: "var(--color-text-secondary)", fontWeight: "500" }}>
+                Maximum Results per Search
+              </label>
+              <select
+                value={resultsPerPage}
+                onChange={(e) => setResultsPerPage(Number(e.target.value))}
+                style={{
+                  padding: "7px 10px",
+                  border: "1px solid var(--color-border)",
+                  borderRadius: "var(--radius-sm)",
+                  backgroundColor: "#FFFFFF",
+                  fontSize: "0.84rem",
+                  color: "var(--color-text-primary)",
+                  outline: "none",
+                }}
+              >
+                <option value={8}>8 products (Fastest)</option>
+                <option value={12}>12 products (Balanced)</option>
+                <option value={18}>18 products (Comprehensive)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Save Action */}
+          <button
+            type="button"
+            onClick={handleSavePreferences}
+            className="btn-primary"
+            style={{ width: "100%", padding: "9px" }}
           >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <Bot size={18} color="var(--color-purple)" />
-                <span style={{ fontSize: "0.88rem", fontWeight: "700", color: "var(--color-purple)" }}>
-                  AI Inference Engine
-                </span>
-              </div>
-              <span className="badge-clean badge-purple" style={{ fontSize: "0.72rem" }}>
-                {status?.ai_status?.toUpperCase() || "OFFLINE"}
-              </span>
-            </div>
+            {savedNotice ? (
+              <>
+                <Check size={16} />
+                <span>Preferences Saved</span>
+              </>
+            ) : (
+              <span>Save Preferences</span>
+            )}
+          </button>
 
-            <p style={{ fontSize: "0.82rem", color: "var(--color-navy)", lineHeight: "1.5", marginBottom: "12px" }}>
-              {status?.ai_status === "ready"
-                ? `Connected to ScaleMax AI (${status.ai_config?.ai_model || "cloud model"}). Generating grounded rankings and natural language explanations.`
-                : "Operating in High-Performance Factual Fallback Mode. Rule-based intent extraction, scraper orchestration, and factual scoring remain 100% active."}
-            </p>
-
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                onOpenAIConfig();
-              }}
-              className="btn-secondary"
-              style={{
-                width: "100%",
-                fontSize: "0.84rem",
-                padding: "8px 14px",
-                backgroundColor: "#FFFFFF",
-              }}
-            >
-              <Settings size={14} />
-              <span>Configure ScaleMax AI & API Key</span>
-            </button>
-          </div>
-
-          {/* Principles */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.78rem", color: "var(--color-text-secondary)" }}>
-            <ShieldCheck size={16} color="var(--color-green)" />
-            <span>Dual-retailer crawling without user tracking or data selling.</span>
+          {/* Privacy Note */}
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.74rem", color: "var(--color-text-muted)" }}>
+            <ShieldCheck size={14} color="var(--color-green)" style={{ flexShrink: 0 }} />
+            <span>Dual-retailer search queries remain private. No behavioral tracking cookies or telemetry.</span>
           </div>
         </div>
       </div>

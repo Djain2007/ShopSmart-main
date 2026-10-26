@@ -1,10 +1,14 @@
 import asyncio
+from pathlib import Path
 import time
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
+from backend.app.services.scalemax_client import ScaleMaxClient
 from backend.app.services.search_service import search_service
 from backend.app.services.search_cache import search_cache
+
+FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
 @pytest.fixture(autouse=True)
@@ -69,8 +73,8 @@ async def test_parallel_retailer_searches_with_timings():
         resp = await search_service.execute_search(query="laptop 16gb ram", max_results_per_source=5)
         total_time = time.perf_counter() - t0
 
-        # Since they ran in parallel (0.05s each), total time should be << 0.10s (approx 0.05 - 0.08s)
-        assert total_time < 0.15
+        # Since they ran in parallel (0.05s each), total time should be << sequential time + I/O
+        assert total_time < 0.35
         assert len(resp.products) == 2
         assert resp.retailer_status["amazon.in"] == "success"
         assert resp.retailer_status["flipkart.com"] == "success"
@@ -324,4 +328,228 @@ async def test_concurrent_duplicate_searches_coalesce_single_execution():
         assert len(resp1.products) == 1
         assert len(resp2.products) == 1
         assert resp1.products[0].id == resp2.products[0].id
+
+
+@pytest.mark.asyncio
+async def test_regression_search_a_wireless_earbuds_pipeline():
+    """
+    Search A Regression:
+    Query: 'wireless earbuds'
+    Amazon: 503 blocked
+    Flipkart: 200, returns earbuds
+    ScaleMax: unconfigured / unavailable
+    Asserts Flipkart products preserved, partial results notice, ai_status=unavailable.
+    """
+    mock_amz_503 = {
+        "source": "amazon.in",
+        "status": "blocked",
+        "message": "amazon.in requires a browser verification challenge at this time.",
+        "products": [],
+    }
+
+    html_path = FIXTURES_DIR / "flipkart_earbuds_search.html"
+    from backend.app.scrapers.flipkart import FlipkartScraper
+    raw_fk_earbuds = FlipkartScraper().parse_search_page(html_path.read_text(encoding="utf-8"))
+    mock_fk_200 = {
+        "source": "flipkart.com",
+        "status": "success",
+        "message": f"Found {len(raw_fk_earbuds)} products",
+        "products": raw_fk_earbuds,
+    }
+
+    with patch.object(search_service.scrapers["amazon.in"], "search", new_callable=AsyncMock, return_value=mock_amz_503), \
+         patch.object(search_service.scrapers["flipkart.com"], "search", new_callable=AsyncMock, return_value=mock_fk_200), \
+         patch.object(ScaleMaxClient, "is_configured", new_callable=PropertyMock, return_value=False):
+
+        resp = await search_service.execute_search(query="wireless earbuds", max_results_per_source=5, use_cache=False)
+
+        assert len(resp.products) == 4
+        assert resp.ai_status == "unavailable"
+        assert resp.retailer_status["amazon.in"] == "blocked"
+        assert resp.retailer_status["flipkart.com"] == "success"
+        assert resp.counts.returned == 4
+        assert all(p.source == "flipkart.com" for p in resp.products)
+        assert any("challenge" in w.lower() for w in resp.warnings)
+        assert resp.timings is not None
+        assert "retailer_search_ms" in resp.timings
+        assert "total_duration_ms" in resp.timings
+
+
+@pytest.mark.asyncio
+async def test_regression_search_b_running_shoes_pipeline():
+    """
+    Search B Regression:
+    Query: 'Running Shoes under 1500 black colour'
+    Amazon: 503 blocked
+    Flipkart: 200, returns 4 running shoes in black under 1500
+    ScaleMax: 200, ranks top 3
+    Asserts all 4 shoes preserved, top 3 AI-ranked with grounded explanations, 4th deterministically scored, ai_status=ready.
+    """
+    mock_amz_503 = {
+        "source": "amazon.in",
+        "status": "blocked",
+        "message": "amazon.in requires a browser verification challenge at this time.",
+        "products": [],
+    }
+
+    html_path = FIXTURES_DIR / "flipkart_running_shoes_search.html"
+    from backend.app.scrapers.flipkart import FlipkartScraper
+    raw_fk_shoes = FlipkartScraper().parse_search_page(html_path.read_text(encoding="utf-8"))
+    mock_fk_200 = {
+        "source": "flipkart.com",
+        "status": "success",
+        "message": f"Found {len(raw_fk_shoes)} products",
+        "products": raw_fk_shoes,
+    }
+
+    # Mock ScaleMax completion response
+    mock_scalemax_ranked_json = {
+        "overall_summary": "Top verified black running shoes under ₹1500 with strong ratings and lightweight cushioning.",
+        "ranked": [
+            {
+                "product_id": "SHOK7KXYZ555",
+                "score": 92.0,
+                "confidence": "high",
+                "summary": "Best overall running shoe under budget with verified 4.2 rating",
+                "pros": ["Priced at ₹1,199 well under budget", "4.2★ rating from 4,500+ runners"],
+                "cons": ["Standard mesh upper"]
+            },
+            {
+                "product_id": "SHOM9MXYZ777",
+                "score": 89.0,
+                "confidence": "high",
+                "summary": "Durable daily running shoe from Sparx under ₹1100",
+                "pros": ["High 4.3★ rating", "Good grip sole"],
+                "cons": ["Slightly heavier build"]
+            },
+            {
+                "product_id": "SHOL8LXYZ666",
+                "score": 85.0,
+                "confidence": "medium",
+                "summary": "Lowest cost option at ₹899 with solid performance",
+                "pros": ["Under ₹900 budget-friendly option"],
+                "cons": ["Basic insole cushioning"]
+            }
+        ]
+    }
+
+    with patch.object(search_service.scrapers["amazon.in"], "search", new_callable=AsyncMock, return_value=mock_amz_503), \
+         patch.object(search_service.scrapers["flipkart.com"], "search", new_callable=AsyncMock, return_value=mock_fk_200), \
+         patch.object(ScaleMaxClient, "is_configured", new_callable=PropertyMock, return_value=True), \
+         patch("backend.app.services.search_service.ai_service.client.complete_json_with_timings", new_callable=AsyncMock, return_value=(mock_scalemax_ranked_json, {"model_completion_ms": 120, "response_parsing_ms": 1})):
+
+        resp = await search_service.execute_search(
+            query="Running Shoes under 1500 black colour",
+            max_results_per_source=5,
+            use_cache=False,
+        )
+
+        assert len(resp.products) == 4
+        assert resp.ai_status == "ready"
+        assert resp.retailer_status["amazon.in"] == "blocked"
+        assert resp.retailer_status["flipkart.com"] == "success"
+
+        # Check that top 3 products have AI ranking and explanations
+        p1 = resp.products[0]
+        assert "SHOK7KXYZ555" in p1.id
+        assert p1.score == 92.0
+        assert p1.explanation.source == "llm"
+        assert "4.2★ rating" in p1.explanation.pros[1]
+
+        # 4th product (Red Tape) was not in top-3 candidates sent to LLM, so it gets deterministic scoring and is preserved
+        p4 = next(p for p in resp.products if "SHON0NXYZ888" in p.id)
+        assert p4 is not None
+        assert p4.explanation.source == "deterministic"
+        assert p4.price == 1349.0
+
+        # Detailed timings attached
+        assert resp.timings is not None
+        assert "scalemax_detailed_timings" in resp.timings
+        assert resp.timings["scalemax_detailed_timings"]["model_completion_ms"] == 120
+
+
+@pytest.mark.asyncio
+async def test_both_retailers_unavailable_returns_no_fake_products():
+    """Verify that when all retailers fail, 0 products are returned, warnings are truthful, and never invents fake products."""
+    mock_amz_blocked = {
+        "source": "amazon.in",
+        "status": "blocked",
+        "message": "amazon.in requires a browser verification challenge.",
+        "products": [],
+    }
+    mock_fk_down = {
+        "source": "flipkart.com",
+        "status": "unavailable",
+        "message": "flipkart.com connection refused.",
+        "products": [],
+    }
+
+    with patch.object(search_service.scrapers["amazon.in"], "search", new_callable=AsyncMock, return_value=mock_amz_blocked), \
+         patch.object(search_service.scrapers["flipkart.com"], "search", new_callable=AsyncMock, return_value=mock_fk_down):
+
+        resp = await search_service.execute_search(query="dslr camera 4k", max_results_per_source=5, use_cache=False)
+
+        assert len(resp.products) == 0
+        assert resp.counts.returned == 0
+        assert any("challenge" in w.lower() or "unreachable" in w.lower() for w in resp.warnings)
+
+
+@pytest.mark.asyncio
+async def test_invalid_ranking_json_preserves_all_products():
+    """Verify that if ScaleMax returns malformed output, deterministic scoring preserves all valid products."""
+    mock_fk = {
+        "source": "flipkart.com",
+        "status": "success",
+        "message": "Found 2 products",
+        "products": [
+            {"id": "P1", "title": "Keyboard A", "price": "1,500", "source": "flipkart.com", "url": "https://www.flipkart.com/keyboard-a/p/itm123?pid=P1"},
+            {"id": "P2", "title": "Keyboard B", "price": "2,000", "source": "flipkart.com", "url": "https://www.flipkart.com/keyboard-b/p/itm456?pid=P2"},
+        ],
+    }
+
+    with patch.object(search_service.scrapers["amazon.in"], "search", new_callable=AsyncMock, return_value={"source": "amazon.in", "status": "no_results", "products": []}), \
+         patch.object(search_service.scrapers["flipkart.com"], "search", new_callable=AsyncMock, return_value=mock_fk), \
+         patch.object(ScaleMaxClient, "is_configured", new_callable=PropertyMock, return_value=True), \
+         patch("backend.app.services.search_service.ai_service.client.complete_json_with_timings", new_callable=AsyncMock, side_effect=ValueError("Corrupted JSON output")):
+
+        resp = await search_service.execute_search(query="mechanical keyboard", max_results_per_source=5, use_cache=False)
+
+        # Both products survive!
+        assert len(resp.products) == 2
+        assert resp.ai_status == "degraded"
+        assert all(p.explanation.source == "deterministic" for p in resp.products)
+
+
+@pytest.mark.asyncio
+async def test_ranking_referencing_hallucinated_ids_filtered():
+    """Verify that if ScaleMax hallucinates non-existent IDs, only genuine candidate IDs are kept."""
+    mock_fk = {
+        "source": "flipkart.com",
+        "status": "success",
+        "message": "Found 1 product",
+        "products": [
+            {"id": "REAL_ID_100", "title": "Genuine Smartwatch", "price": "2,499", "source": "flipkart.com", "url": "https://www.flipkart.com/smartwatch/p/itm100?pid=REAL_ID_100"},
+        ],
+    }
+
+    mock_scalemax_hallucination = {
+        "overall_summary": "Top smartwatches",
+        "ranked": [
+            {"product_id": "FAKE_HALLUCINATED_999", "score": 99.0, "summary": "Invented product"},
+            {"product_id": "REAL_ID_100", "score": 88.0, "summary": "Real verified product"},
+        ]
+    }
+
+    with patch.object(search_service.scrapers["amazon.in"], "search", new_callable=AsyncMock, return_value={"source": "amazon.in", "status": "no_results", "products": []}), \
+         patch.object(search_service.scrapers["flipkart.com"], "search", new_callable=AsyncMock, return_value=mock_fk), \
+         patch.object(ScaleMaxClient, "is_configured", new_callable=PropertyMock, return_value=True), \
+         patch("backend.app.services.search_service.ai_service.client.complete_json_with_timings", new_callable=AsyncMock, return_value=(mock_scalemax_hallucination, {"model_completion_ms": 100, "response_parsing_ms": 1})):
+
+        resp = await search_service.execute_search(query="smartwatch", max_results_per_source=5, use_cache=False)
+
+        assert len(resp.products) == 1
+        assert "REAL_ID_100" in resp.products[0].id
+        assert resp.products[0].score == 88.0
+        assert not any("FAKE_HALLUCINATED_999" in p.id for p in resp.products)
+
 

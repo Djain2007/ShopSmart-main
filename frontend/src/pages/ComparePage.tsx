@@ -4,15 +4,14 @@ import {
   ArrowLeft,
   X,
   ExternalLink,
-  Sparkles,
   Award,
-  Tag,
   Star,
   Plus,
   Loader2,
   AlertCircle,
   Eye,
   CheckCircle2,
+  TrendingDown,
 } from "lucide-react";
 import type { AppCompareResponse, UnifiedProduct } from "../types";
 import { apiClient } from "../api/client";
@@ -39,29 +38,38 @@ export const ComparePage: React.FC<ComparePageProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [quickViewProduct, setQuickViewProduct] = useState<UnifiedProduct | null>(null);
 
-  const loadComparison = async (prods: UnifiedProduct[] = products) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const pids = prods.map((p) => p.id);
-      const res = await apiClient.compare(pids);
-      setData(res);
-    } catch (err: any) {
-      setError(err.message || "Failed to generate comparison matrix.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const productIdsKey = products.map((p) => p.id).sort().join(",");
 
   useEffect(() => {
+    let isCancelled = false;
     if (products.length >= 2) {
-      loadComparison(products);
+      setLoading(true);
+      setError(null);
+      const pids = products.map((p) => p.id);
+      apiClient
+        .compare(pids)
+        .then((res) => {
+          if (!isCancelled) {
+            setData(res);
+            setLoading(false);
+          }
+        })
+        .catch((err: any) => {
+          if (!isCancelled) {
+            setError(err.message || "Failed to generate comparison matrix.");
+            setLoading(false);
+          }
+        });
     } else {
       setData(null);
+      setLoading(false);
     }
-  }, [products]);
+    return () => {
+      isCancelled = true;
+    };
+  }, [productIdsKey]);
 
-  // Find highlights
+  // Highlights
   const validPrices = products.filter((p) => p.price !== null).map((p) => ({ id: p.id, price: p.price! }));
   const lowestPriceId = validPrices.length > 0 ? validPrices.reduce((min, p) => (p.price < min.price ? p : min)).id : null;
 
@@ -81,23 +89,22 @@ export const ComparePage: React.FC<ComparePageProps> = ({
       <div
         className="card-clean"
         style={{
-          padding: "72px 24px",
+          padding: "54px 24px",
           textAlign: "center",
-          maxWidth: "680px",
+          maxWidth: "600px",
           margin: "40px auto",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: "18px",
-          borderRadius: "var(--radius-xl)",
-          boxShadow: "var(--shadow-md)",
+          gap: "14px",
+          borderRadius: "var(--radius-lg)",
         }}
       >
         <div
           style={{
-            width: "64px",
-            height: "64px",
-            borderRadius: "50%",
+            width: "48px",
+            height: "48px",
+            borderRadius: "var(--radius-md)",
             backgroundColor: "var(--color-royal-blue-light)",
             color: "var(--color-royal-blue)",
             display: "flex",
@@ -105,15 +112,15 @@ export const ComparePage: React.FC<ComparePageProps> = ({
             justifyContent: "center",
           }}
         >
-          <Scale size={32} />
+          <Scale size={24} />
         </div>
 
         <div>
-          <h2 style={{ fontSize: "1.6rem", fontWeight: "800", color: "var(--color-navy)", marginBottom: "8px" }}>
+          <h2 style={{ fontSize: "1.35rem", fontWeight: "700", color: "var(--color-navy)", marginBottom: "6px" }}>
             Select at least two products to compare
           </h2>
-          <p style={{ fontSize: "0.95rem", color: "var(--color-text-secondary)", lineHeight: "1.6" }}>
-            Currently you have {products.length} {products.length === 1 ? "product" : "products"} in your queue. Browse products in Explore & Search and click "Compare" on the items you wish to evaluate side by side.
+          <p style={{ fontSize: "0.88rem", color: "var(--color-text-secondary)", lineHeight: "1.5" }}>
+            You currently have {products.length} {products.length === 1 ? "product" : "products"} in your comparison queue. Browse products in Explore & Search and click "Compare" on the items you wish to evaluate.
           </p>
         </div>
 
@@ -121,22 +128,17 @@ export const ComparePage: React.FC<ComparePageProps> = ({
           type="button"
           onClick={() => onTabChange("explore")}
           className="btn-primary"
-          style={{
-            padding: "12px 24px",
-            fontSize: "0.95rem",
-            borderRadius: "var(--radius-full)",
-            marginTop: "10px",
-          }}
+          style={{ marginTop: "4px" }}
         >
-          <ArrowLeft size={16} />
-          <span>Browse & Select in Explore</span>
+          <ArrowLeft size={15} />
+          <span>Browse Products in Explore</span>
         </button>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       {/* 1. Page Header */}
       <section
         style={{
@@ -144,7 +146,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
           alignItems: "center",
           justifyContent: "space-between",
           flexWrap: "wrap",
-          gap: "16px",
+          gap: "12px",
         }}
       >
         <div>
@@ -154,82 +156,91 @@ export const ComparePage: React.FC<ComparePageProps> = ({
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: "6px",
-              fontSize: "0.85rem",
+              gap: "4px",
+              fontSize: "0.82rem",
               fontWeight: "600",
               color: "var(--color-royal-blue)",
-              marginBottom: "8px",
+              marginBottom: "4px",
               cursor: "pointer",
             }}
           >
-            <ArrowLeft size={15} />
-            <span>Return to Explore & Search</span>
+            <ArrowLeft size={14} />
+            <span>Back to search results</span>
           </button>
 
-          <h1 style={{ fontSize: "2.1rem", fontWeight: "800", color: "var(--color-navy)", marginBottom: "6px" }}>
-            Compare Products
+          <h1 style={{ fontSize: "1.65rem", fontWeight: "700", color: "var(--color-navy)", marginBottom: "3px" }}>
+            Product Comparison Matrix
           </h1>
-          <p style={{ fontSize: "0.95rem", color: "var(--color-text-secondary)" }}>
-            Evaluate specifications, pricing, and ratings side by side to find the right product for you.
+          <p style={{ fontSize: "0.86rem", color: "var(--color-text-secondary)" }}>
+            Side-by-side evaluation across retailer pricing, ratings, and verified hardware specifications.
           </p>
         </div>
 
         {/* Action Controls */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <button
             type="button"
             onClick={() => onTabChange("explore")}
             className="btn-secondary"
-            style={{ fontSize: "0.85rem" }}
+            style={{ fontSize: "0.82rem", padding: "6px 12px" }}
           >
-            <Plus size={15} />
-            <span>Add more items</span>
+            <Plus size={14} />
+            <span>Add products</span>
           </button>
 
           <button
             type="button"
             onClick={onClear}
-            className="btn-secondary"
-            style={{ fontSize: "0.85rem", color: "var(--color-rose)" }}
+            className="btn-ghost"
+            style={{ fontSize: "0.82rem", color: "var(--color-rose)" }}
           >
-            <span>Clear all</span>
+            <span>Clear queue</span>
           </button>
         </div>
       </section>
 
-      {/* 2. Loading / Error / Comparison Matrix Table */}
+      {/* 2. Loading / Error / Matrix */}
       {loading ? (
         <div
           className="card-clean"
           style={{
-            padding: "80px 24px",
+            padding: "60px 20px",
             textAlign: "center",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: "14px",
+            gap: "12px",
           }}
         >
-          <Loader2 size={36} className="animate-spin" color="var(--color-royal-blue)" />
-          <h3 style={{ fontSize: "1.1rem", fontWeight: "700", color: "var(--color-navy)" }}>
-            Building side-by-side comparison matrix...
+          <Loader2 size={28} className="animate-spin" color="var(--color-royal-blue)" />
+          <h3 style={{ fontSize: "1rem", fontWeight: "600", color: "var(--color-navy)" }}>
+            Assembling specification matrix...
           </h3>
-          <p style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)" }}>
-            Extracting hardware specifications, normalising prices, and computing advantages across retailers.
+          <p style={{ fontSize: "0.82rem", color: "var(--color-text-secondary)" }}>
+            Normalizing attributes and computing side-by-side differences across retailer catalogs.
           </p>
         </div>
       ) : error ? (
         <div
           className="card-clean"
           style={{
-            padding: "40px 24px",
+            padding: "36px 20px",
             textAlign: "center",
             color: "var(--color-rose)",
           }}
         >
-          <AlertCircle size={36} style={{ margin: "0 auto 12px" }} />
-          <p>{error}</p>
-          <button onClick={() => loadComparison(products)} className="btn-secondary" style={{ marginTop: "16px" }}>
+          <AlertCircle size={28} style={{ margin: "0 auto 8px" }} />
+          <p style={{ fontSize: "0.88rem", marginBottom: "12px" }}>{error}</p>
+          <button
+            onClick={() => {
+              const pids = products.map((p) => p.id);
+              setLoading(true);
+              setError(null);
+              apiClient.compare(pids).then(setData).catch((e) => setError(e.message)).finally(() => setLoading(false));
+            }}
+            className="btn-secondary"
+            style={{ fontSize: "0.82rem" }}
+          >
             Retry Comparison
           </button>
         </div>
@@ -237,39 +248,37 @@ export const ComparePage: React.FC<ComparePageProps> = ({
         <section
           className="card-clean"
           style={{
-            borderRadius: "var(--radius-xl)",
+            borderRadius: "var(--radius-lg)",
             overflow: "hidden",
-            boxShadow: "var(--shadow-md)",
             border: "1px solid var(--color-border)",
             backgroundColor: "var(--color-white)",
           }}
         >
-          {/* Table Container with Horizontal Scroll for Small Screens */}
           <div style={{ overflowX: "auto" }}>
             <table
               style={{
                 width: "100%",
                 borderCollapse: "collapse",
                 textAlign: "left",
-                minWidth: `${200 + products.length * 240}px`,
+                minWidth: `${180 + products.length * 220}px`,
               }}
             >
-              {/* Product Header Columns */}
+              {/* Product Header Row */}
               <thead>
-                <tr style={{ backgroundColor: "#F8FAFC", borderBottom: "2px solid var(--color-border)" }}>
+                <tr style={{ backgroundColor: "var(--color-bg-subtle)", borderBottom: "1px solid var(--color-border)" }}>
                   <th
                     style={{
-                      width: "220px",
-                      padding: "20px",
-                      fontSize: "0.85rem",
+                      width: "180px",
+                      padding: "16px",
+                      fontSize: "0.76rem",
                       fontWeight: "700",
                       color: "var(--color-text-secondary)",
                       textTransform: "uppercase",
-                      letterSpacing: "0.05em",
+                      letterSpacing: "0.04em",
                       verticalAlign: "top",
                     }}
                   >
-                    Attribute
+                    Feature / Attribute
                   </th>
 
                   {products.map((p) => {
@@ -280,57 +289,59 @@ export const ComparePage: React.FC<ComparePageProps> = ({
                       <th
                         key={p.id}
                         style={{
-                          padding: "20px",
+                          padding: "16px",
                           width: `${100 / (products.length + 1)}%`,
-                          minWidth: "220px",
+                          minWidth: "210px",
                           verticalAlign: "top",
                           position: "relative",
+                          borderLeft: "1px solid var(--color-border)",
                         }}
                       >
-                        {/* Remove button */}
+                        {/* Remove Action */}
                         <button
                           type="button"
                           onClick={() => onRemove(p.id)}
                           title="Remove from comparison"
+                          aria-label={`Remove ${p.title} from comparison`}
                           style={{
                             position: "absolute",
-                            top: "12px",
-                            right: "12px",
-                            width: "24px",
-                            height: "24px",
-                            borderRadius: "50%",
-                            backgroundColor: "#FFFFFF",
+                            top: "10px",
+                            right: "10px",
+                            width: "22px",
+                            height: "22px",
+                            borderRadius: "var(--radius-xs)",
+                            backgroundColor: "var(--color-white)",
                             border: "1px solid var(--color-border)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            color: "var(--color-text-secondary)",
+                            color: "var(--color-text-muted)",
                             cursor: "pointer",
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = "var(--color-rose)";
-                            e.currentTarget.style.color = "#FFFFFF";
+                            e.currentTarget.style.color = "var(--color-rose)";
+                            e.currentTarget.style.borderColor = "var(--color-rose-border)";
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "#FFFFFF";
-                            e.currentTarget.style.color = "var(--color-text-secondary)";
+                            e.currentTarget.style.color = "var(--color-text-muted)";
+                            e.currentTarget.style.borderColor = "var(--color-border)";
                           }}
                         >
-                          <X size={13} />
+                          <X size={12} />
                         </button>
 
                         {/* Image stage */}
                         <div
                           style={{
-                            height: "130px",
+                            height: "120px",
                             backgroundColor: "#FFFFFF",
-                            border: "1px solid var(--color-border)",
-                            borderRadius: "var(--radius-md)",
-                            padding: "10px",
+                            border: "1px solid var(--color-border-subtle)",
+                            borderRadius: "var(--radius-sm)",
+                            padding: "8px",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            marginBottom: "12px",
+                            marginBottom: "10px",
                           }}
                         >
                           {p.image_url ? (
@@ -340,23 +351,24 @@ export const ComparePage: React.FC<ComparePageProps> = ({
                               style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }}
                             />
                           ) : (
-                            <Scale size={28} color="var(--color-text-muted)" />
+                            <Scale size={24} color="var(--color-text-muted)" />
                           )}
                         </div>
 
                         {/* Retailer badge */}
-                        <span
-                          className={`badge-clean ${p.source === "amazon.in" ? "badge-amazon" : "badge-flipkart"}`}
-                          style={{ marginBottom: "6px" }}
-                        >
-                          {p.source === "amazon.in" ? "Amazon India" : "Flipkart"}
-                        </span>
+                        <div style={{ marginBottom: "6px" }}>
+                          <span
+                            className={`badge-clean ${p.source === "amazon.in" ? "badge-amazon" : "badge-flipkart"}`}
+                          >
+                            {p.source === "amazon.in" ? "Amazon India" : "Flipkart"}
+                          </span>
+                        </div>
 
-                        {/* Product Title */}
-                        <h4
+                        {/* Title */}
+                        <h3
                           style={{
-                            fontSize: "0.92rem",
-                            fontWeight: "700",
+                            fontSize: "0.85rem",
+                            fontWeight: "600",
                             color: "var(--color-navy)",
                             lineHeight: "1.35",
                             marginBottom: "8px",
@@ -364,44 +376,45 @@ export const ComparePage: React.FC<ComparePageProps> = ({
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: "vertical",
                             overflow: "hidden",
+                            height: "2.7em",
                           }}
                           title={p.title}
                         >
                           {p.title}
-                        </h4>
+                        </h3>
 
                         {/* Price */}
-                        <div style={{ display: "flex", alignItems: "baseline", gap: "6px", marginBottom: "12px" }}>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: "6px", marginBottom: "10px", flexWrap: "wrap" }}>
                           <span
                             style={{
-                              fontSize: "1.2rem",
-                              fontWeight: "800",
+                              fontSize: "1.1rem",
+                              fontWeight: "700",
                               color: isLowest ? "var(--color-orange)" : "var(--color-navy)",
                             }}
                           >
-                            {p.price !== null ? `₹${p.price.toLocaleString("en-IN")}` : "₹--"}
+                            {p.price !== null ? `₹${p.price.toLocaleString("en-IN")}` : "Price unavailable"}
                           </span>
                           {isLowest && (
-                            <span className="badge-clean badge-orange" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>
+                            <span className="badge-clean badge-orange">
                               Lowest
                             </span>
                           )}
                           {isBestRated && (
-                            <span className="badge-clean badge-emerald" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>
+                            <span className="badge-clean badge-green">
                               Top Rated
                             </span>
                           )}
                         </div>
 
-                        {/* Quick View & Retailer link */}
+                        {/* Actions */}
                         <div style={{ display: "flex", gap: "6px" }}>
                           <button
                             type="button"
                             onClick={() => setQuickViewProduct(p)}
                             className="btn-secondary"
-                            style={{ padding: "6px 10px", fontSize: "0.78rem" }}
+                            style={{ padding: "4px 8px", fontSize: "0.76rem" }}
                           >
-                            <Eye size={13} />
+                            <Eye size={12} />
                             <span>Details</span>
                           </button>
                           <a
@@ -409,10 +422,10 @@ export const ComparePage: React.FC<ComparePageProps> = ({
                             target="_blank"
                             rel="noopener noreferrer"
                             className="btn-secondary"
-                            style={{ padding: "6px 10px", fontSize: "0.78rem", textDecoration: "none" }}
+                            style={{ padding: "4px 8px", fontSize: "0.76rem" }}
                           >
                             <span>Store</span>
-                            <ExternalLink size={12} />
+                            <ExternalLink size={11} />
                           </a>
                         </div>
                       </th>
@@ -421,153 +434,63 @@ export const ComparePage: React.FC<ComparePageProps> = ({
                 </tr>
               </thead>
 
-              {/* Attributes Rows */}
+              {/* Rows */}
               <tbody>
-                {/* 1. ShopSmart Match Score */}
+                {/* 1. Match Score */}
                 <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                  <td style={{ padding: "16px 20px", fontWeight: "600", fontSize: "0.86rem", color: "var(--color-navy)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <Sparkles size={15} color="var(--color-royal-blue)" />
-                      <span>ShopSmart Match</span>
-                    </div>
+                  <td style={{ padding: "12px 16px", fontWeight: "600", fontSize: "0.82rem", color: "var(--color-navy)" }}>
+                    Match Score
                   </td>
                   {products.map((p) => (
-                    <td key={p.id} style={{ padding: "16px 20px" }}>
-                      <span className="badge-clean badge-blue" style={{ fontSize: "0.82rem", fontWeight: "700" }}>
+                    <td key={p.id} style={{ padding: "12px 16px", borderLeft: "1px solid var(--color-border)" }}>
+                      <span className="badge-clean badge-blue">
                         {p.score !== undefined ? `${Math.round(p.score)}/100` : "85/100"}
                       </span>
                     </td>
                   ))}
                 </tr>
 
-                {/* 2. Catalog Price */}
-                <tr style={{ borderBottom: "1px solid var(--color-border)", backgroundColor: "#FAFAFA" }}>
-                  <td style={{ padding: "16px 20px", fontWeight: "600", fontSize: "0.86rem", color: "var(--color-navy)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <Tag size={15} color="var(--color-orange)" />
-                      <span>Catalog Price</span>
-                    </div>
-                  </td>
-                  {products.map((p) => {
-                    const isLowest = p.id === lowestPriceId;
-                    return (
-                      <td key={p.id} style={{ padding: "16px 20px" }}>
-                        <span
-                          style={{
-                            fontSize: "0.95rem",
-                            fontWeight: isLowest ? "800" : "600",
-                            color: isLowest ? "var(--color-orange)" : "var(--color-navy)",
-                          }}
-                        >
-                          {p.price !== null ? `₹${p.price.toLocaleString("en-IN")}` : "Unavailable"}
-                        </span>
-                        {isLowest && (
-                          <div style={{ fontSize: "0.74rem", color: "var(--color-orange)", fontWeight: "600", marginTop: "2px" }}>
-                            Lowest price among compared
-                          </div>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-
-                {/* 3. Customer Rating */}
-                <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                  <td style={{ padding: "16px 20px", fontWeight: "600", fontSize: "0.86rem", color: "var(--color-navy)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <Star size={15} color="var(--color-green)" />
-                      <span>Customer Rating</span>
-                    </div>
-                  </td>
-                  {products.map((p) => {
-                    const isBest = p.id === highestRatingId;
-                    return (
-                      <td key={p.id} style={{ padding: "16px 20px" }}>
-                        {p.rating !== null ? (
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <span
-                              className={`badge-clean ${isBest ? "badge-green" : ""}`}
-                              style={{
-                                fontSize: "0.82rem",
-                                fontWeight: "700",
-                                backgroundColor: isBest ? undefined : "#F1F5F9",
-                                color: isBest ? undefined : "var(--color-navy)",
-                              }}
-                            >
-                              <Star size={12} fill="currentColor" />
-                              {p.rating.toFixed(1)}★
-                            </span>
-                            {isBest && (
-                              <span style={{ fontSize: "0.72rem", color: "var(--color-green)", fontWeight: "700" }}>
-                                Top Rated
-                              </span>
-                            )}
-                          </div>
-                        ) : (
-                          <span style={{ fontSize: "0.82rem", color: "var(--color-text-muted)" }}>Unrated</span>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-
-                {/* 4. Number of Reviews */}
-                <tr style={{ borderBottom: "1px solid var(--color-border)", backgroundColor: "#FAFAFA" }}>
-                  <td style={{ padding: "16px 20px", fontWeight: "600", fontSize: "0.86rem", color: "var(--color-navy)" }}>
-                    <span>Total Reviews</span>
+                {/* 2. Customer Rating */}
+                <tr style={{ borderBottom: "1px solid var(--color-border)", backgroundColor: "var(--color-bg-subtle)" }}>
+                  <td style={{ padding: "12px 16px", fontWeight: "600", fontSize: "0.82rem", color: "var(--color-navy)" }}>
+                    Customer Rating
                   </td>
                   {products.map((p) => (
-                    <td key={p.id} style={{ padding: "16px 20px", fontSize: "0.86rem", color: "var(--color-text-primary)" }}>
-                      {p.review_count !== null ? `${p.review_count.toLocaleString("en-IN")} verified reviews` : "Not available"}
+                    <td key={p.id} style={{ padding: "12px 16px", borderLeft: "1px solid var(--color-border)" }}>
+                      {p.rating !== null ? (
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          <span className="badge-clean badge-green">
+                            <Star size={10} fill="currentColor" strokeWidth={0} />
+                            {p.rating.toFixed(1)}★
+                          </span>
+                          {p.review_count !== null && (
+                            <span style={{ fontSize: "0.74rem", color: "var(--color-text-muted)" }}>
+                              ({p.review_count.toLocaleString("en-IN")})
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: "0.78rem", color: "var(--color-text-muted)" }}>Unrated</span>
+                      )}
                     </td>
                   ))}
                 </tr>
 
-                {/* 5. List Price & Discount */}
-                <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                  <td style={{ padding: "16px 20px", fontWeight: "600", fontSize: "0.86rem", color: "var(--color-navy)" }}>
-                    <span>List Price & Discount</span>
-                  </td>
-                  {products.map((p) => {
-                    const discount = p.price && p.list_price && p.list_price > p.price
-                      ? Math.round(((p.list_price - p.price) / p.list_price) * 100)
-                      : null;
-                    return (
-                      <td key={p.id} style={{ padding: "16px 20px", fontSize: "0.86rem" }}>
-                        {p.list_price !== null ? (
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <span style={{ textDecoration: "line-through", color: "var(--color-text-muted)" }}>
-                              ₹{p.list_price.toLocaleString("en-IN")}
-                            </span>
-                            {discount && (
-                              <span className="badge-clean badge-orange" style={{ fontWeight: "700" }}>
-                                {discount}% OFF
-                              </span>
-                            )}
-                          </div>
-                        ) : (
-                          <span style={{ color: "var(--color-text-muted)" }}>No discount listed</span>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-
-                {/* 6. Dynamic Backend Comparison Rows (if data returned from API) */}
+                {/* 3. Dynamic Backend Specification Rows */}
                 {data?.rows && data.rows.map((row, rIdx) => {
-                  if (row.kind === "price" || row.kind === "rating") return null; // already displayed above in structured format
+                  if (row.kind === "price" || row.kind === "rating") return null;
                   return (
                     <tr
                       key={rIdx}
                       style={{
                         borderBottom: "1px solid var(--color-border)",
-                        backgroundColor: rIdx % 2 === 0 ? "#FAFAFA" : "#FFFFFF",
+                        backgroundColor: rIdx % 2 === 0 ? "#FFFFFF" : "var(--color-bg-subtle)",
                       }}
                     >
-                      <td style={{ padding: "16px 20px", fontWeight: "600", fontSize: "0.86rem", color: "var(--color-navy)" }}>
+                      <td style={{ padding: "12px 16px", fontWeight: "600", fontSize: "0.82rem", color: "var(--color-navy)" }}>
                         <span>{row.criterion}</span>
                         {row.note && (
-                          <div style={{ fontSize: "0.72rem", color: "var(--color-text-muted)", marginTop: "2px" }}>
+                          <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", marginTop: "1px" }}>
                             {row.note}
                           </div>
                         )}
@@ -579,15 +502,16 @@ export const ComparePage: React.FC<ComparePageProps> = ({
                           <td
                             key={p.id}
                             style={{
-                              padding: "16px 20px",
-                              fontSize: "0.85rem",
+                              padding: "12px 16px",
+                              fontSize: "0.82rem",
                               color: isBest ? "var(--color-royal-blue)" : "var(--color-text-primary)",
-                              fontWeight: isBest ? "700" : "500",
+                              fontWeight: isBest ? "600" : "400",
+                              borderLeft: "1px solid var(--color-border)",
                             }}
                           >
                             {cell?.value ? (
                               <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                {isBest && <CheckCircle2 size={14} color="var(--color-royal-blue)" />}
+                                {isBest && <CheckCircle2 size={13} color="var(--color-royal-blue)" />}
                                 <span>{cell.value}</span>
                               </div>
                             ) : (
@@ -600,62 +524,50 @@ export const ComparePage: React.FC<ComparePageProps> = ({
                   );
                 })}
 
-                {/* 7. Key Features / Bullets */}
+                {/* 4. Verified Highlights */}
                 <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                  <td style={{ padding: "16px 20px", fontWeight: "600", fontSize: "0.86rem", color: "var(--color-navy)" }}>
-                    <span>Key Features</span>
+                  <td style={{ padding: "12px 16px", fontWeight: "600", fontSize: "0.82rem", color: "var(--color-navy)" }}>
+                    Key Specifications
                   </td>
                   {products.map((p) => (
-                    <td key={p.id} style={{ padding: "16px 20px", fontSize: "0.82rem", color: "var(--color-text-secondary)" }}>
+                    <td key={p.id} style={{ padding: "12px 16px", fontSize: "0.78rem", color: "var(--color-text-secondary)", borderLeft: "1px solid var(--color-border)" }}>
                       {p.bullet_points && p.bullet_points.length > 0 ? (
-                        <ul style={{ paddingLeft: "16px", lineHeight: "1.5", display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <ul style={{ paddingLeft: "14px", lineHeight: "1.45", display: "flex", flexDirection: "column", gap: "2px" }}>
                           {p.bullet_points.slice(0, 3).map((bp, i) => (
                             <li key={i}>{bp}</li>
                           ))}
                         </ul>
                       ) : (
-                        <span style={{ color: "var(--color-text-muted)" }}>Not specified</span>
+                        <span style={{ color: "var(--color-text-muted)" }}>None listed</span>
                       )}
                     </td>
                   ))}
                 </tr>
 
-                {/* 8. Strengths & Trade-offs */}
-                <tr style={{ backgroundColor: "#F8FAFC" }}>
-                  <td style={{ padding: "16px 20px", fontWeight: "600", fontSize: "0.86rem", color: "var(--color-navy)" }}>
-                    <span>Strengths & Trade-offs</span>
+                {/* 5. Trade-offs */}
+                <tr style={{ backgroundColor: "var(--color-bg-subtle)" }}>
+                  <td style={{ padding: "12px 16px", fontWeight: "600", fontSize: "0.82rem", color: "var(--color-navy)" }}>
+                    Pros & Trade-offs
                   </td>
                   {products.map((p) => (
-                    <td key={p.id} style={{ padding: "16px 20px", fontSize: "0.8rem", verticalAlign: "top" }}>
+                    <td key={p.id} style={{ padding: "12px 16px", fontSize: "0.76rem", verticalAlign: "top", borderLeft: "1px solid var(--color-border)" }}>
                       {p.explanation ? (
-                        <div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                           {p.explanation.pros.length > 0 && (
-                            <div style={{ marginBottom: "6px" }}>
-                              <strong style={{ color: "var(--color-green)", fontSize: "0.74rem", textTransform: "uppercase" }}>
-                                Advantages:
-                              </strong>
-                              <ul style={{ paddingLeft: "16px", marginTop: "2px", color: "var(--color-text-primary)" }}>
-                                {p.explanation.pros.slice(0, 2).map((pro, i) => (
-                                  <li key={i}>{pro}</li>
-                                ))}
-                              </ul>
+                            <div>
+                              <strong style={{ color: "var(--color-green)", fontSize: "0.72rem" }}>PROS:</strong>{" "}
+                              <span>{p.explanation.pros.slice(0, 2).join("; ")}</span>
                             </div>
                           )}
                           {p.explanation.cons.length > 0 && (
                             <div>
-                              <strong style={{ color: "var(--color-orange)", fontSize: "0.74rem", textTransform: "uppercase" }}>
-                                Trade-offs:
-                              </strong>
-                              <ul style={{ paddingLeft: "16px", marginTop: "2px", color: "var(--color-text-secondary)" }}>
-                                {p.explanation.cons.slice(0, 2).map((con, i) => (
-                                  <li key={i}>{con}</li>
-                                ))}
-                              </ul>
+                              <strong style={{ color: "var(--color-orange)", fontSize: "0.72rem" }}>CONS:</strong>{" "}
+                              <span>{p.explanation.cons.slice(0, 2).join("; ")}</span>
                             </div>
                           )}
                         </div>
                       ) : (
-                        <span style={{ color: "var(--color-text-muted)" }}>Spec comparison active</span>
+                        <span style={{ color: "var(--color-text-muted)" }}>Specifications available above</span>
                       )}
                     </td>
                   ))}
@@ -666,14 +578,14 @@ export const ComparePage: React.FC<ComparePageProps> = ({
         </section>
       )}
 
-      {/* 3. Recommendation Summary Below Table */}
+      {/* 3. Recommendation Highlights Summary */}
       {!loading && (
         <section>
-          <div style={{ marginBottom: "16px" }}>
-            <h3 style={{ fontSize: "1.3rem", fontWeight: "800", color: "var(--color-navy)", marginBottom: "4px" }}>
-              Recommendation Summary
+          <div style={{ marginBottom: "12px" }}>
+            <h3 style={{ fontSize: "1.15rem", fontWeight: "700", color: "var(--color-navy)", marginBottom: "2px" }}>
+              Comparison Highlights
             </h3>
-            <p style={{ fontSize: "0.88rem", color: "var(--color-text-secondary)" }}>
+            <p style={{ fontSize: "0.82rem", color: "var(--color-text-secondary)" }}>
               Data-backed takeaways from the compared product group.
             </p>
           </div>
@@ -681,8 +593,8 @@ export const ComparePage: React.FC<ComparePageProps> = ({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: "20px",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: "16px",
             }}
           >
             {/* Best Overall Match */}
@@ -690,25 +602,25 @@ export const ComparePage: React.FC<ComparePageProps> = ({
               <div
                 className="card-clean"
                 style={{
-                  padding: "20px",
-                  borderRadius: "var(--radius-lg)",
-                  borderTop: "4px solid var(--color-royal-blue)",
+                  padding: "16px",
+                  borderRadius: "var(--radius-md)",
+                  borderTop: "3px solid var(--color-royal-blue)",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                  <Award size={18} color="var(--color-royal-blue)" />
-                  <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--color-royal-blue)", textTransform: "uppercase" }}>
-                    Best Overall Match
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                  <Award size={16} color="var(--color-royal-blue)" />
+                  <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "var(--color-royal-blue)", textTransform: "uppercase" }}>
+                    Best Match
                   </span>
                 </div>
-                <h4 style={{ fontSize: "1rem", fontWeight: "700", color: "var(--color-navy)", marginBottom: "6px" }}>
+                <h4 style={{ fontSize: "0.92rem", fontWeight: "600", color: "var(--color-navy)", marginBottom: "4px" }}>
                   {bestOverallProduct.title}
                 </h4>
-                <p style={{ fontSize: "0.82rem", color: "var(--color-text-secondary)", lineHeight: "1.5", marginBottom: "12px" }}>
-                  Achieved highest objective match score based on hardware specifications, review ratio, and price stability.
+                <p style={{ fontSize: "0.78rem", color: "var(--color-text-secondary)", lineHeight: "1.45", marginBottom: "8px" }}>
+                  Highest objective match score based on hardware specifications, review ratio, and price stability.
                 </p>
-                <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "var(--color-navy)" }}>
-                  {bestOverallProduct.price !== null ? `₹${bestOverallProduct.price.toLocaleString("en-IN")}` : "₹--"}
+                <div style={{ fontSize: "1.05rem", fontWeight: "700", color: "var(--color-navy)" }}>
+                  {bestOverallProduct.price !== null ? `₹${bestOverallProduct.price.toLocaleString("en-IN")}` : "Price unavailable"}
                 </div>
               </div>
             )}
@@ -718,25 +630,25 @@ export const ComparePage: React.FC<ComparePageProps> = ({
               <div
                 className="card-clean"
                 style={{
-                  padding: "20px",
-                  borderRadius: "var(--radius-lg)",
-                  borderTop: "4px solid var(--color-orange)",
+                  padding: "16px",
+                  borderRadius: "var(--radius-md)",
+                  borderTop: "3px solid var(--color-orange)",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                  <Tag size={18} color="var(--color-orange)" />
-                  <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--color-orange)", textTransform: "uppercase" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                  <TrendingDown size={16} color="var(--color-orange)" />
+                  <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "var(--color-orange)", textTransform: "uppercase" }}>
                     Lowest Price
                   </span>
                 </div>
-                <h4 style={{ fontSize: "1rem", fontWeight: "700", color: "var(--color-navy)", marginBottom: "6px" }}>
+                <h4 style={{ fontSize: "0.92rem", fontWeight: "600", color: "var(--color-navy)", marginBottom: "4px" }}>
                   {lowestPriceProduct.title}
                 </h4>
-                <p style={{ fontSize: "0.82rem", color: "var(--color-text-secondary)", lineHeight: "1.5", marginBottom: "12px" }}>
-                  The most budget-friendly choice among all selected items while preserving essential product features.
+                <p style={{ fontSize: "0.78rem", color: "var(--color-text-secondary)", lineHeight: "1.45", marginBottom: "8px" }}>
+                  Most budget-friendly choice among all compared items while fulfilling core requirements.
                 </p>
-                <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "var(--color-orange)" }}>
-                  {lowestPriceProduct.price !== null ? `₹${lowestPriceProduct.price.toLocaleString("en-IN")}` : "₹--"}
+                <div style={{ fontSize: "1.05rem", fontWeight: "700", color: "var(--color-orange)" }}>
+                  {lowestPriceProduct.price !== null ? `₹${lowestPriceProduct.price.toLocaleString("en-IN")}` : "Price unavailable"}
                 </div>
               </div>
             )}
@@ -746,25 +658,25 @@ export const ComparePage: React.FC<ComparePageProps> = ({
               <div
                 className="card-clean"
                 style={{
-                  padding: "20px",
-                  borderRadius: "var(--radius-lg)",
-                  borderTop: "4px solid var(--color-green)",
+                  padding: "16px",
+                  borderRadius: "var(--radius-md)",
+                  borderTop: "3px solid var(--color-green)",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                  <Star size={18} color="var(--color-green)" />
-                  <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--color-green)", textTransform: "uppercase" }}>
-                    Highest Customer Satisfaction
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                  <Star size={16} color="var(--color-green)" />
+                  <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "var(--color-green)", textTransform: "uppercase" }}>
+                    Top Rated
                   </span>
                 </div>
-                <h4 style={{ fontSize: "1rem", fontWeight: "700", color: "var(--color-navy)", marginBottom: "6px" }}>
+                <h4 style={{ fontSize: "0.92rem", fontWeight: "600", color: "var(--color-navy)", marginBottom: "4px" }}>
                   {highestRatedProduct.title}
                 </h4>
-                <p style={{ fontSize: "0.82rem", color: "var(--color-text-secondary)", lineHeight: "1.5", marginBottom: "12px" }}>
+                <p style={{ fontSize: "0.78rem", color: "var(--color-text-secondary)", lineHeight: "1.45", marginBottom: "8px" }}>
                   Holds top customer rating of {highestRatedProduct.rating}★ across verified purchaser feedback.
                 </p>
-                <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "var(--color-navy)" }}>
-                  {highestRatedProduct.price !== null ? `₹${highestRatedProduct.price.toLocaleString("en-IN")}` : "₹--"}
+                <div style={{ fontSize: "1.05rem", fontWeight: "700", color: "var(--color-navy)" }}>
+                  {highestRatedProduct.price !== null ? `₹${highestRatedProduct.price.toLocaleString("en-IN")}` : "Price unavailable"}
                 </div>
               </div>
             )}

@@ -49,6 +49,7 @@ async def search(req: AppSearchRequest):
             max_results_per_source=req.max_results_per_source,
             budget_max=req.budget_max,
             sort_by=req.sort_by,
+            enable_ai_ranking=req.enable_ai_ranking,
         )
 
         # Cache valid products for compare and chat

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import json
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from urllib.parse import quote_plus, urljoin
 
@@ -13,8 +13,8 @@ from backend.app.scrapers.base import BaseScraper, BotChallengeError
 class FlipkartScraper(BaseScraper):
     """Adapter for discovering products from Flipkart public search supporting both grid and list layouts."""
 
-    def __init__(self):
-        super().__init__(source_name="flipkart.com", timeout_seconds=10.0)
+    def __init__(self, timeout_seconds: Optional[float] = None):
+        super().__init__(source_name="flipkart.com", timeout_seconds=timeout_seconds)
 
     def build_search_url(self, query: str) -> str:
         return f"https://www.flipkart.com/search?q={quote_plus(query)}"
@@ -68,6 +68,9 @@ class FlipkartScraper(BaseScraper):
             if not rel_url or ("/p/" not in rel_url and "pid=" not in rel_url):
                 if pid and pid in json_ld_map:
                     full_url = json_ld_map[pid][1]
+                elif rel_url and pid:
+                    full_url = urljoin("https://www.flipkart.com", rel_url)
+                    full_url += f"{'&' if '?' in full_url else '?'}pid={pid}"
                 else:
                     continue
             else:
@@ -87,7 +90,7 @@ class FlipkartScraper(BaseScraper):
             if brand_el:
                 brand = brand_el.get_text(strip=True) or None
 
-            # Title extraction with multiple fallbacks (fashion grid, electronics list, link title, json-ld)
+            # Title extraction with multiple fallbacks (fashion grid, electronics list, link title, json-ld, text)
             title = None
 
             # Check title attribute on link elements
@@ -113,6 +116,14 @@ class FlipkartScraper(BaseScraper):
 
             if not title and pid in json_ld_map:
                 title = json_ld_map[pid][0]
+
+            if not title:
+                # Fallback: scan anchor text in card for product description
+                for a_cand in card.find_all("a"):
+                    c_text = a_cand.get_text(strip=True)
+                    if len(c_text) > 4 and not c_text.startswith("₹") and "off" not in c_text.lower():
+                        title = c_text
+                        break
 
             # Prepend brand if not already in title
             if brand and title and brand.lower() not in title.lower():

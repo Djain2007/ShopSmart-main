@@ -160,3 +160,79 @@ def test_amazon_scraper_bot_challenge_detection():
     with pytest.raises(BotChallengeError):
         scraper.parse_search_page(html)
 
+
+def test_flipkart_earbuds_parsing():
+    """Regression test for Search A query 'wireless earbuds' using sanitized Flipkart HTML."""
+    html_path = FIXTURES_DIR / "flipkart_earbuds_search.html"
+    assert html_path.exists()
+    html = html_path.read_text(encoding="utf-8")
+
+    scraper = FlipkartScraper()
+    products = scraper.parse_search_page(html)
+
+    assert len(products) == 4
+
+    p1 = products[0]
+    assert p1["id"] == "ACCG9GXYZ111"
+    assert "boAt Airdopes 141" in p1["title"]
+    assert "1,299" in p1["price"]
+    assert "4,490" in p1["list_price"]
+    assert p1["rating"] == 4.0
+    assert p1["review_count"] == 21432
+    assert p1["source"] == "flipkart.com"
+    assert len(p1["bullets"]) >= 2
+
+    p2 = products[1]
+    assert p2["id"] == "ACCH8HXYZ222"
+    assert "realme Buds T300" in p2["title"]
+    assert "2,299" in p2["price"]
+    assert p2["rating"] == 4.4
+    assert p2["review_count"] == 8450
+
+
+def test_flipkart_running_shoes_parsing():
+    """Regression test for Search B query 'Running Shoes under 1500 black colour' using sanitized Flipkart HTML."""
+    html_path = FIXTURES_DIR / "flipkart_running_shoes_search.html"
+    assert html_path.exists()
+    html = html_path.read_text(encoding="utf-8")
+
+    scraper = FlipkartScraper()
+    products = scraper.parse_search_page(html)
+
+    assert len(products) == 4
+
+    # Campus
+    p1 = products[0]
+    assert p1["id"] == "SHOK7KXYZ555"
+    assert "CAMPUS" in p1["title"]
+    assert "1,199" in p1["price"]
+    assert "1,699" in p1["list_price"]
+    assert p1["brand"] == "CAMPUS"
+    assert p1["rating"] == 4.2
+
+    # Asian
+    p2 = products[1]
+    assert p2["id"] == "SHOL8LXYZ666"
+    assert "ASIAN" in p2["title"]
+    assert "899" in p2["price"]
+    assert p2["rating"] == 4.1
+
+    # Red Tape
+    p4 = products[3]
+    assert p4["id"] == "SHON0NXYZ888"
+    assert "RED TAPE" in p4["title"]
+    assert "1,349" in p4["price"]
+    assert "5,599" in p4["list_price"]
+
+
+def test_flipkart_empty_page_returns_no_products():
+    """Test valid Flipkart HTML containing zero extractable products returns empty list without error or fake items."""
+    html_path = FIXTURES_DIR / "flipkart_empty_search.html"
+    assert html_path.exists()
+    html = html_path.read_text(encoding="utf-8")
+
+    scraper = FlipkartScraper()
+    products = scraper.parse_search_page(html)
+    assert products == []
+
+
